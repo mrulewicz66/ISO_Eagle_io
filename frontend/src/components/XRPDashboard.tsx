@@ -494,20 +494,22 @@ export default function XRPDashboard() {
                     </div>
                 </div>
 
-                {/* Mock Data Toggle */}
-                <div className="mt-4 flex items-center justify-end gap-3">
-                    <span className="text-blue-200 text-sm">Test Scalability:</span>
-                    <button
-                        onClick={() => setShowMockData(!showMockData)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            showMockData
-                                ? 'bg-yellow-500 text-black'
-                                : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
-                        }`}
-                    >
-                        {showMockData ? 'MOCK DATA (12 months)' : 'Show Mock Data'}
-                    </button>
-                </div>
+                {/* Mock Data Toggle - hidden in production */}
+                {process.env.NODE_ENV === 'development' && (
+                    <div className="mt-4 flex items-center justify-end gap-3">
+                        <span className="text-blue-200 text-sm">Test Scalability:</span>
+                        <button
+                            onClick={() => setShowMockData(!showMockData)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                showMockData
+                                    ? 'bg-yellow-500 text-black'
+                                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                            }`}
+                        >
+                            {showMockData ? 'MOCK DATA (12 months)' : 'Show Mock Data'}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* ETF Flow Chart */}
