@@ -140,7 +140,7 @@ class DataAggregator {
                     SET price_usd = $2, market_cap = $3, volume_24h = $4, price_change_24h = $5
                 `, [crypto.symbol.toUpperCase(), crypto.current_price, crypto.market_cap, crypto.total_volume, crypto.price_change_percentage_24h]);
             } catch (err) {
-                console.error(`Error storing price data for ${crypto.symbol}:`, err.message);
+                console.error(`Error storing price data for ${crypto.symbol}:`, err.code || err.message || err);
             }
         }
     }
@@ -235,7 +235,7 @@ class DataAggregator {
                     SET net_flow = $3, total_holdings = $4
                 `, [date, asset, netFlow, totalAssets, 'TOTAL']);
             } catch (err) {
-                console.error(`Error storing SoSoValue ETF flow for ${asset}:`, err.message);
+                console.error(`Error storing SoSoValue ETF flow for ${asset}:`, err.code || err.message || err);
             }
         }
     }
