@@ -3,23 +3,53 @@ const axios = require('axios');
 class CoinGlassService {
     constructor(apiKey) {
         this.apiKey = apiKey;
-        this.baseURL = 'https://open-api-v3.coinglass.com/api';
+        this.baseURL = 'https://open-api-v4.coinglass.com/api';
         this.headers = {
             'CG-API-KEY': apiKey,
             'Content-Type': 'application/json'
         };
     }
 
+    // Check if API requires plan upgrade
+    isUpgradeRequired(response) {
+        return response?.data?.code === '400' && response?.data?.msg === 'Upgrade plan';
+    }
+
     async getXRPETFFlows() {
+        if (!this.apiKey) {
+            console.log('CoinGlass API key not configured');
+            return null;
+        }
+
         try {
             const response = await axios.get(
-                `${this.baseURL}/etf/xrp/flows-history`,
+                `${this.baseURL}/etf/xrp/flow-history`,
                 { headers: this.headers }
             );
+
+            if (this.isUpgradeRequired(response)) {
+                console.log('CoinGlass: XRP ETF flows requires plan upgrade');
+                return null;
+            }
+
+            if (response.data.code === '404') {
+                console.log('CoinGlass: XRP ETF endpoint not yet available');
+                return null;
+            }
+
             return response.data.data || [];
         } catch (error) {
+            const errData = error.response?.data;
+            if (errData?.code === '400' && errData?.msg === 'Upgrade plan') {
+                console.log('CoinGlass: XRP ETF flows requires plan upgrade');
+                return null;
+            }
+            if (errData?.code === '404') {
+                console.log('CoinGlass: XRP ETF endpoint not yet available in API');
+                return null;
+            }
             console.error('CoinGlass XRP ETF Flows API Error:', error.message);
-            throw error;
+            return null;
         }
     }
 
@@ -103,22 +133,49 @@ class CoinGlassService {
     }
 
     async getExchangeBalance(symbol = 'XRP') {
+        if (!this.apiKey) {
+            console.log('CoinGlass API key not configured');
+            return null;
+        }
+
         try {
+            // Try the balance list endpoint
             const response = await axios.get(
-                `${this.baseURL}/exchange/balance`,
+                `${this.baseURL}/exchange/balance/list`,
                 {
                     params: { symbol: symbol.toUpperCase() },
                     headers: this.headers
                 }
             );
+
+            const errData = response.data;
+            if (errData?.code === '400' && errData?.msg === 'Upgrade plan') {
+                console.log(`CoinGlass: ${symbol} exchange balance requires plan upgrade ($18/mo Hobbyist)`);
+                return null;
+            }
+
             return response.data.data || [];
         } catch (error) {
+            const errData = error.response?.data;
+            if (errData?.code === '400' && errData?.msg === 'Upgrade plan') {
+                console.log(`CoinGlass: ${symbol} exchange balance requires plan upgrade ($18/mo Hobbyist)`);
+                return null;
+            }
             console.error('CoinGlass Exchange Balance API Error:', error.message);
-            throw error;
+            return null;
         }
     }
 
+    async getXRPExchangeReserves() {
+        return this.getExchangeBalance('XRP');
+    }
+
     async getSpotInflow(symbol = 'XRP') {
+        if (!this.apiKey) {
+            console.log('CoinGlass API key not configured');
+            return null;
+        }
+
         try {
             const response = await axios.get(
                 `${this.baseURL}/spot/exchange-inflow`,
@@ -127,11 +184,55 @@ class CoinGlassService {
                     headers: this.headers
                 }
             );
+
+            const errData = response.data;
+            if (errData?.code === '400' && errData?.msg === 'Upgrade plan') {
+                console.log(`CoinGlass: ${symbol} spot inflow requires plan upgrade`);
+                return null;
+            }
+
             return response.data.data || [];
         } catch (error) {
+            const errData = error.response?.data;
+            if (errData?.code === '400' && errData?.msg === 'Upgrade plan') {
+                console.log(`CoinGlass: ${symbol} spot inflow requires plan upgrade`);
+                return null;
+            }
             console.error('CoinGlass Spot Inflow API Error:', error.message);
-            throw error;
+            return null;
         }
+    }
+
+    // Test which endpoints are available with current API key
+    async testAvailableEndpoints() {
+        const results = {
+            xrpETFFlows: { available: false, reason: '' },
+            xrpExchangeBalance: { available: false, reason: '' },
+            btcETFFlows: { available: false, reason: '' }
+        };
+
+        try {
+            const xrpETF = await this.getXRPETFFlows();
+            results.xrpETFFlows = { available: xrpETF !== null, reason: xrpETF === null ? 'Not available or upgrade required' : 'OK' };
+        } catch (e) {
+            results.xrpETFFlows = { available: false, reason: e.message };
+        }
+
+        try {
+            const xrpBalance = await this.getExchangeBalance('XRP');
+            results.xrpExchangeBalance = { available: xrpBalance !== null, reason: xrpBalance === null ? 'Upgrade required' : 'OK' };
+        } catch (e) {
+            results.xrpExchangeBalance = { available: false, reason: e.message };
+        }
+
+        try {
+            const btcETF = await this.getBTCETFFlows();
+            results.btcETFFlows = { available: btcETF !== null, reason: btcETF === null ? 'Upgrade required' : 'OK' };
+        } catch (e) {
+            results.btcETFFlows = { available: false, reason: e.message };
+        }
+
+        return results;
     }
 }
 

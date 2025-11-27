@@ -24,16 +24,17 @@ This guide details how to build a real-time monitoring website focused on:
 
 ## 2. Data Sources & APIs
 
-### Required APIs (Priority Order)
+### Required APIs (All Require Paid Plans)
 
 #### 1. CoinGlass - XRP ETF Daily Flows
 - **Website:** https://www.coinglass.com/pricing
 - **Features:**
   - Dedicated XRP ETF flows endpoint
-  - Daily inflows/outflows by ETF ticker
+  - Daily inflows/outflows by ETF ticker (GXRP, XRPC, EZRP, etc.)
   - Historical data
-- **Endpoint:** `/api/etf/xrp/flows-history`
-- **Pricing:** Free tier available
+- **Endpoint:** `/api/etf/xrp/flow-history`
+- **Pricing:** Starts at $18/month (Hobbyist plan)
+- **Note:** XRP ETF data requires paid subscription
 
 #### 2. CryptoQuant - XRP Exchange Supply
 - **Website:** https://cryptoquant.com/pricing
@@ -45,15 +46,17 @@ This guide details how to build a real-time monitoring website focused on:
   - `/v1/xrp/exchange-flows/exchange-reserve`
   - `/v1/xrp/exchange-flows/exchange-inflow`
   - `/v1/xrp/exchange-flows/exchange-outflow`
-- **Pricing:** Free "Community" tier available
+- **Pricing:** Paid subscription required
 
-#### 3. CoinGecko - Price Data (Optional)
-- **Website:** https://www.coingecko.com/en/api/pricing
+#### 3. CoinGecko - Price Data (FREE)
+- **Website:** https://api.coingecko.com/api/v3
 - **Features:**
   - Real-time XRP price
-  - Market cap, volume
-  - ISO 20022 token prices
-- **Pricing:** Free "Demo" tier (30 calls/min)
+  - Market cap, volume, 24h change
+  - ISO 20022 token prices (XRP, XLM, ADA, ALGO, HBAR, IOTA, QNT, XDC)
+  - Top 10 cryptocurrencies
+- **Pricing:** FREE public API (no key required, ~10-30 calls/min)
+- **Status:** WORKING
 
 ---
 
@@ -287,23 +290,28 @@ CREATE TABLE price_data (
 
 ## 9. Cost Breakdown
 
-### Free Tier Stack
-| Service | Plan | Cost |
-|---------|------|------|
-| CoinGlass | Free | $0 |
-| CryptoQuant | Community | $0 |
-| CoinGecko | Demo | $0 |
-| Vercel (Frontend) | Free | $0 |
-| Railway (Backend) | Free | $0 |
-| **Total** | | **$0/month** |
+### Current Working Stack (FREE)
+| Service | Plan | Cost | Data Provided | Status |
+|---------|------|------|---------------|--------|
+| CoinGecko | Public API | $0 | Price data, market cap, volume | WORKING |
+| Vercel (Frontend) | Free | $0 | Hosting | - |
+| Railway (Backend) | Free | $0 | Hosting | - |
+| **Current Total** | | **$0/month** | | |
 
-### Professional Stack
-| Service | Plan | Cost |
-|---------|------|------|
-| CoinGlass | Pro | ~$50-100/month |
-| CryptoQuant | Professional | ~$100/month |
-| CoinGecko | Analyst | $129/month |
-| **Total** | | **~$280-330/month** |
+### Optional Paid Upgrades
+| Service | Plan | Cost | Data Provided |
+|---------|------|------|---------------|
+| CoinGlass | Hobbyist | $18/month | XRP ETF flows (GXRP, XRPC, etc.) |
+| CryptoQuant | Paid | TBD | XRP exchange reserves |
+
+### What Works for Free
+- Real-time XRP price, market cap, volume
+- ISO 20022 tokens (XRP, XLM, ADA, ALGO, HBAR, IOTA, QNT, XDC)
+- Top 10 cryptocurrencies by market cap
+
+### What Requires Paid Plans
+- XRP ETF daily inflows/outflows (CoinGlass $18+/mo)
+- XRP exchange reserve data (CryptoQuant - paid)
 
 ---
 

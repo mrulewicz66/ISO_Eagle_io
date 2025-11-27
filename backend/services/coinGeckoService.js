@@ -4,9 +4,8 @@ class CoinGeckoService {
     constructor(apiKey) {
         this.apiKey = apiKey;
         this.baseURL = 'https://api.coingecko.com/api/v3';
-        this.headers = {
-            'x-cg-demo-api-key': apiKey
-        };
+        // Public API works without key (rate limited to ~10-30 calls/min)
+        this.headers = apiKey ? { 'x-cg-demo-api-key': apiKey } : {};
     }
 
     async getTopCryptos() {

@@ -1,6 +1,4 @@
 import XRPDashboard from '@/components/XRPDashboard';
-import XRPExchangeSupply from '@/components/XRPExchangeSupply';
-import PriceTable from '@/components/PriceTable';
 import ISO20022Table from '@/components/ISO20022Table';
 import ConnectionStatus from '@/components/ConnectionStatus';
 
@@ -13,11 +11,21 @@ export default function Home() {
             <header className="bg-zinc-900 border-b border-zinc-800 p-4">
                 <div className="container mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-white font-bold">CM</span>
+                        <div
+                            className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden"
+                            style={{ backgroundColor: '#2F2F2F' }}
+                            title="ISO Eagle"
+                        >
+                            <img
+                                src="/iso-eagle.png"
+                                alt="ISO Eagle"
+                                style={{
+                                    transform: 'scale(1.15) translateY(6%)',
+                                }}
+                            />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">Crypto Monitor</h1>
+                            <h1 className="text-xl font-bold text-white">ISO Eagle</h1>
                             <p className="text-xs text-zinc-400">XRP & ISO 20022 Focus</p>
                         </div>
                     </div>
@@ -36,13 +44,8 @@ export default function Home() {
                         <span className="text-zinc-400 text-sm">XRP Institutional Tracking</span>
                     </div>
 
-                    {/* XRP ETF Dashboard with Stats */}
+                    {/* XRP ETF Dashboard with Stats + Exchange Reserves */}
                     <XRPDashboard />
-                </section>
-
-                {/* XRP Exchange Supply */}
-                <section>
-                    <XRPExchangeSupply />
                 </section>
 
                 {/* ========== SECONDARY SECTION: ISO 20022 ========== */}
@@ -56,12 +59,27 @@ export default function Home() {
                     <ISO20022Table />
                 </section>
 
-                {/* Top 10 Cryptos */}
+                {/* ========== SUPPORT SECTION ========== */}
                 <section className="pt-8 border-t border-zinc-800">
-                    <h2 className="text-lg font-semibold text-zinc-400 mb-4">
-                        Top 10 Cryptocurrencies
-                    </h2>
-                    <PriceTable />
+                    <div className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 p-6 rounded-xl border border-amber-500/30">
+                        <div className="flex items-center gap-4">
+                            <div className="text-4xl">☕</div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-amber-200">Support This Dashboard</h3>
+                                <p className="text-amber-100/70 text-sm">
+                                    Help upgrade to commercial API access for more real-time data, historical charts, and additional features.
+                                </p>
+                            </div>
+                            <a
+                                href="https://buymeacoffee.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-lg transition-colors"
+                            >
+                                Donate
+                            </a>
+                        </div>
+                    </div>
                 </section>
 
             </main>

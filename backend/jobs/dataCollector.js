@@ -4,6 +4,17 @@ const DataAggregator = require('../services/dataAggregator');
 const aggregator = new DataAggregator();
 
 function startDataCollectionJobs() {
+    // Run immediately on startup
+    setTimeout(async () => {
+        console.log('Running initial data collection...');
+        try {
+            await aggregator.aggregateAllData();
+            console.log('Initial data collection completed');
+        } catch (error) {
+            console.error('Initial data collection failed:', error);
+        }
+    }, 2000);
+
     // Run every 5 minutes
     cron.schedule('*/5 * * * *', async () => {
         console.log('Running data collection job...');

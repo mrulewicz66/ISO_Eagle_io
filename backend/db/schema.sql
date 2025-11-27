@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS price_data (
     price_usd DECIMAL(20, 8),
     market_cap DECIMAL(30, 2),
     volume_24h DECIMAL(30, 2),
+    price_change_24h DECIMAL(10, 4),
     created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(timestamp, crypto_symbol)
 );

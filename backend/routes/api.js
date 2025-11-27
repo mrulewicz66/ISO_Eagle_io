@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
+const CoinGlassService = require('../services/coinGlassService');
+
+// Initialize CoinGlass service
+const coinGlass = new CoinGlassService(process.env.COINGLASS_API_KEY);
 
 // Get latest ETF flows
 router.get('/etf-flows', async (req, res) => {
@@ -61,7 +65,7 @@ router.get('/prices', async (req, res) => {
     try {
         const query = `
             SELECT DISTINCT ON (crypto_symbol)
-                crypto_symbol, price_usd, market_cap, volume_24h, timestamp
+                crypto_symbol, price_usd, market_cap, volume_24h, price_change_24h, timestamp
             FROM price_data
             ORDER BY crypto_symbol, timestamp DESC
         `;
@@ -107,6 +111,76 @@ router.get('/dashboard-summary', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching dashboard summary:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get XRP ETF flows from CoinGlass (real-time)
+router.get('/xrp-etf-flows', async (req, res) => {
+    try {
+        const flows = await coinGlass.getXRPETFFlows();
+        if (!flows) {
+            return res.status(503).json({ error: 'CoinGlass API unavailable or upgrade required' });
+        }
+
+        // Transform data for frontend
+        const transformedFlows = flows.map(flow => ({
+            date: new Date(flow.timestamp).toISOString().split('T')[0],
+            timestamp: flow.timestamp,
+            net_flow: flow.flow_usd,
+            price_usd: flow.price_usd,
+            etf_breakdown: flow.etf_flows?.map(etf => ({
+                ticker: etf.etf_ticker,
+                flow_usd: etf.flow_usd || 0
+            })) || []
+        }));
+
+        res.json(transformedFlows);
+    } catch (error) {
+        console.error('Error fetching XRP ETF flows:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get XRP exchange balances from CoinGlass (real-time)
+router.get('/xrp-exchange-balances', async (req, res) => {
+    try {
+        const balances = await coinGlass.getXRPExchangeReserves();
+        if (!balances) {
+            return res.status(503).json({ error: 'CoinGlass API unavailable or upgrade required' });
+        }
+
+        // Transform and sort by balance
+        const transformedBalances = balances
+            .map(b => ({
+                exchange: b.exchange_name,
+                balance: b.total_balance,
+                change_1d: b.balance_change_1d,
+                change_1d_pct: b.balance_change_percent_1d,
+                change_7d: b.balance_change_7d,
+                change_7d_pct: b.balance_change_percent_7d,
+                change_30d: b.balance_change_30d,
+                change_30d_pct: b.balance_change_percent_30d
+            }))
+            .sort((a, b) => b.balance - a.balance);
+
+        // Calculate totals
+        const totalBalance = transformedBalances.reduce((sum, b) => sum + b.balance, 0);
+        const total1dChange = transformedBalances.reduce((sum, b) => sum + (b.change_1d || 0), 0);
+        const total7dChange = transformedBalances.reduce((sum, b) => sum + (b.change_7d || 0), 0);
+        const total30dChange = transformedBalances.reduce((sum, b) => sum + (b.change_30d || 0), 0);
+
+        res.json({
+            exchanges: transformedBalances,
+            totals: {
+                balance: totalBalance,
+                change_1d: total1dChange,
+                change_7d: total7dChange,
+                change_30d: total30dChange
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching XRP exchange balances:', error);
         res.status(500).json({ error: error.message });
     }
 });

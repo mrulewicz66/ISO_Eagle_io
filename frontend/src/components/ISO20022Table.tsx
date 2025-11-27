@@ -7,6 +7,7 @@ interface CryptoPrice {
     price_usd: string;
     market_cap: string;
     volume_24h: string;
+    price_change_24h: string;
     timestamp: string;
 }
 
@@ -20,6 +21,18 @@ const ISO_20022_TOKENS = [
     { symbol: 'QNT', name: 'Quant', description: 'Blockchain interoperability' },
     { symbol: 'ADA', name: 'Cardano', description: 'Proof-of-stake platform' },
 ];
+
+// Token logos from CoinGecko
+const TOKEN_LOGOS: { [key: string]: string } = {
+    'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+    'XLM': 'https://assets.coingecko.com/coins/images/100/small/Stellar_symbol_black_RGB.png',
+    'XDC': 'https://assets.coingecko.com/coins/images/2912/small/xdc-icon.png',
+    'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/download.png',
+    'IOTA': 'https://assets.coingecko.com/coins/images/692/small/IOTA_Swirl.png',
+    'HBAR': 'https://assets.coingecko.com/coins/images/3688/small/hbar.png',
+    'QNT': 'https://assets.coingecko.com/coins/images/3370/small/5ZOu7brX_400x400.jpg',
+    'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+};
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -36,14 +49,24 @@ export default function ISO20022Table() {
 
     const fetchPriceData = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/prices`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(`${API_BASE_URL}/api/prices`, {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
             if (!response.ok) throw new Error('Failed to fetch');
             const json = await response.json();
             setPrices(json);
             setError(null);
         } catch (err) {
-            setError('Failed to load prices');
-            console.error('Error fetching prices:', err);
+            if (err instanceof Error && err.name === 'AbortError') {
+                setError('Backend unavailable - start the backend server');
+            } else {
+                setError('Backend unavailable - start the backend server');
+            }
         } finally {
             setLoading(false);
         }
@@ -110,6 +133,9 @@ export default function ISO20022Table() {
                                 Price
                             </th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                24h %
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                                 Market Cap
                             </th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
@@ -124,8 +150,22 @@ export default function ISO20022Table() {
                                 <tr key={token.symbol} className="hover:bg-purple-50 dark:hover:bg-purple-900/10">
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold mr-3">
-                                                {token.symbol.slice(0, 2)}
+                                            <div className="relative w-8 h-8 mr-3">
+                                                {/* Fallback always rendered behind */}
+                                                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                                                    {token.symbol.slice(0, 2)}
+                                                </div>
+                                                {/* Logo image overlays fallback */}
+                                                {TOKEN_LOGOS[token.symbol] && (
+                                                    <img
+                                                        src={TOKEN_LOGOS[token.symbol]}
+                                                        alt={token.symbol}
+                                                        className="absolute inset-0 w-8 h-8 rounded-full object-cover bg-zinc-800"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                        }}
+                                                    />
+                                                )}
                                             </div>
                                             <div>
                                                 <div className="text-sm font-medium text-zinc-900 dark:text-white">
@@ -142,6 +182,13 @@ export default function ISO20022Table() {
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-medium text-zinc-900 dark:text-white">
                                         {priceData ? formatCurrency(priceData.price_usd) : '-'}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-semibold">
+                                        {priceData && priceData.price_change_24h ? (
+                                            <span className={parseFloat(priceData.price_change_24h) >= 0 ? 'text-green-500' : 'text-red-500'}>
+                                                {parseFloat(priceData.price_change_24h) >= 0 ? '+' : ''}{parseFloat(priceData.price_change_24h).toFixed(2)}%
+                                            </span>
+                                        ) : '-'}
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-zinc-500 dark:text-zinc-400">
                                         {priceData ? formatCurrency(priceData.market_cap) : '-'}

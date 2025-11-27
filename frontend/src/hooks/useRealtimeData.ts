@@ -16,10 +16,13 @@ export function useRealtimeData() {
     const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
-        const newSocket = io(SOCKET_URL);
+        const newSocket = io(SOCKET_URL, {
+            reconnectionAttempts: 3,
+            reconnectionDelay: 1000,
+            timeout: 5000
+        });
 
         newSocket.on('connect', () => {
-            console.log('Connected to WebSocket');
             setConnected(true);
         });
 
@@ -28,7 +31,10 @@ export function useRealtimeData() {
         });
 
         newSocket.on('disconnect', () => {
-            console.log('Disconnected from WebSocket');
+            setConnected(false);
+        });
+
+        newSocket.on('connect_error', () => {
             setConnected(false);
         });
 
