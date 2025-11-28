@@ -872,7 +872,7 @@ export default function XRPDashboard() {
 
                 {/* ETF Market Hours Note */}
                 <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
-                    <p className="text-[10px] sm:text-xs text-zinc-500">
+                    <p className="text-[10px] sm:text-xs text-zinc-300">
                         ETF data is available for trading days only (Mon-Fri). Weekend gaps are normal. Today's data appears after US market close (~4pm ET).
                     </p>
                 </div>
@@ -947,11 +947,11 @@ export default function XRPDashboard() {
                     </div>
 
                     <div className="mt-3 sm:mt-4 p-2 sm:p-4 bg-zinc-800/50 rounded-lg space-y-1 sm:space-y-2">
-                        <p className="text-[10px] sm:text-xs text-zinc-400">
-                            <span className="text-green-400">Green = XRP leaving</span> (bullish) |
-                            <span className="text-red-400 ml-1">Red = XRP entering</span> (bearish)
+                        <p className="text-[10px] sm:text-xs text-zinc-200">
+                            <span className="text-green-400 font-medium">Green = XRP leaving</span> (bullish) |
+                            <span className="text-red-400 font-medium ml-1">Red = XRP entering</span> (bearish)
                         </p>
-                        <p className="text-[10px] sm:text-xs text-zinc-500 hidden sm:block">
+                        <p className="text-[10px] sm:text-xs text-zinc-300 hidden sm:block">
                             Note: 24h change shows N/A because CoinGlass does not currently provide intraday data for XRP exchange balances.
                         </p>
                     </div>
