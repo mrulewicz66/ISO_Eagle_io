@@ -660,7 +660,7 @@ export default function XRPDashboard() {
                                         </filter>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 10, fill: '#9CA3AF', angle: -45, textAnchor: 'end' }} axisLine={{ stroke: '#4B5563' }} interval={0} height={60} />
+                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} interval={0} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeDasharray="3 3" />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} />} />
