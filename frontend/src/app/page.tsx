@@ -74,7 +74,7 @@ export default function Home() {
                                 </p>
                             </div>
                             <a
-                                href="https://buymeacoffee.com/isoeagle"
+                                href="https://buymeacoffee.com/isoeagle.io"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-lg transition-colors whitespace-nowrap"
