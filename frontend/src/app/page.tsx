@@ -90,10 +90,10 @@ export default function Home() {
             {/* Footer */}
             <footer className="bg-zinc-900 border-t border-zinc-800 px-3 py-4 sm:p-6 mt-8 sm:mt-12">
                 <div className="container mx-auto text-center">
-                    <p className="text-xs sm:text-sm text-zinc-500">
+                    <p className="text-xs sm:text-sm text-white">
                         Data: CoinGecko, CoinGlass, CryptoQuant. Not financial advice.
                     </p>
-                    <p className="text-[10px] sm:text-xs text-zinc-600 mt-1 sm:mt-2">
+                    <p className="text-[10px] sm:text-xs text-zinc-300 mt-1 sm:mt-2">
                         XRP ETF data is for informational purposes only.
                     </p>
                 </div>
