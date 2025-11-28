@@ -102,6 +102,19 @@ const getExchangeLogo = (exchangeName: string): string | null => {
 type ChartType = 'bar' | 'area' | 'line' | 'composed';
 type TimeRange = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all';
 
+// Custom X-axis tick to show all labels with rotation
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomXAxisTick = (props: any) => {
+    const { x, y, payload } = props;
+    return (
+        <g transform={`translate(${x},${y})`}>
+            <text x={0} y={0} dy={12} textAnchor="end" fill="#9CA3AF" fontSize={9} transform="rotate(-35)">
+                {payload?.value}
+            </text>
+        </g>
+    );
+};
+
 // Custom tooltip component for ETF flow charts
 const CustomTooltip = ({ active, payload, label, formatFlow }: {
     active?: boolean;
@@ -660,7 +673,7 @@ export default function XRPDashboard() {
                                         </filter>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} interval={0} />
+                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={0} height={50} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeDasharray="3 3" />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} />} />
