@@ -48,12 +48,29 @@ interface ExchangeData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-const ETF_INFO: { [key: string]: { color: string; institution: string } } = {
+// Known ETFs with their colors and institutions
+const KNOWN_ETF_INFO: { [key: string]: { color: string; institution: string } } = {
     'XRPC': { color: '#10B981', institution: 'Canary Capital' },
     'XRPZ': { color: '#3B82F6', institution: 'Franklin Templeton' },
     'XRP': { color: '#F59E0B', institution: 'Bitwise' },
     'GXRP': { color: '#8B5CF6', institution: 'Grayscale' },
 };
+
+// Color palette for dynamically discovered ETFs (new launches)
+const DYNAMIC_ETF_COLORS = [
+    '#EC4899', // Pink
+    '#14B8A6', // Teal
+    '#F97316', // Orange
+    '#06B6D4', // Cyan
+    '#84CC16', // Lime
+    '#A855F7', // Purple
+    '#EF4444', // Red
+    '#0EA5E9', // Sky
+    '#22D3EE', // Light Cyan
+    '#FBBF24', // Amber
+    '#D946EF', // Fuchsia
+    '#2DD4BF', // Teal light
+];
 
 // Exchange logo URLs (using CoinGecko/public sources)
 const EXCHANGE_LOGOS: { [key: string]: string } = {
@@ -125,11 +142,12 @@ const getXAxisInterval = (dataLength: number): number | 'preserveStartEnd' => {
 };
 
 // Custom tooltip component for ETF flow charts
-const CustomTooltip = ({ active, payload, label, formatFlow }: {
+const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo }: {
     active?: boolean;
     payload?: Array<{ payload: ETFFlow & { displayDate: string } }>;
     label?: string;
     formatFlow: (num: number) => string;
+    etfInfo: { [key: string]: { color: string; institution: string } };
 }) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -171,10 +189,10 @@ const CustomTooltip = ({ active, payload, label, formatFlow }: {
                                     width: '8px',
                                     height: '8px',
                                     borderRadius: '50%',
-                                    backgroundColor: ETF_INFO[etf.ticker]?.color || '#6B7280'
+                                    backgroundColor: etfInfo[etf.ticker]?.color || '#6B7280'
                                 }} />
                                 <span style={{ color: 'white', fontSize: '12px' }}>{etf.ticker}</span>
-                                <span style={{ color: '#6B7280', fontSize: '10px' }}>{ETF_INFO[etf.ticker]?.institution}</span>
+                                <span style={{ color: '#6B7280', fontSize: '10px' }}>{etfInfo[etf.ticker]?.institution}</span>
                             </div>
                             <span style={{ color: etf.flow_usd >= 0 ? '#4ade80' : '#f87171', fontSize: '12px', fontWeight: 500 }}>
                                 {etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}
@@ -203,6 +221,33 @@ export default function XRPDashboard() {
     const [chartType, setChartType] = useState<ChartType>('composed');
     const [showMockData, setShowMockData] = useState(false);
     const [timeRange, setTimeRange] = useState<TimeRange>('all');
+
+    // Build dynamic ETF info map that includes any new ETFs from API data
+    const dynamicETFInfo = useMemo(() => {
+        const info: { [key: string]: { color: string; institution: string } } = { ...KNOWN_ETF_INFO };
+
+        // Collect all unique tickers from the data
+        const allTickers = new Set<string>();
+        etfFlows.forEach(flow => {
+            flow.etf_breakdown?.forEach(etf => {
+                allTickers.add(etf.ticker);
+            });
+        });
+
+        // Assign colors to unknown tickers (new ETF launches)
+        let colorIndex = 0;
+        allTickers.forEach(ticker => {
+            if (!info[ticker]) {
+                info[ticker] = {
+                    color: DYNAMIC_ETF_COLORS[colorIndex % DYNAMIC_ETF_COLORS.length],
+                    institution: ticker // Use ticker as placeholder until we know the institution
+                };
+                colorIndex++;
+            }
+        });
+
+        return info;
+    }, [etfFlows]);
 
     useEffect(() => {
         fetchData();
@@ -631,10 +676,10 @@ export default function XRPDashboard() {
                                                         <div className="flex items-center gap-2">
                                                             <div
                                                                 className="w-3 h-3 rounded-full"
-                                                                style={{ backgroundColor: ETF_INFO[etf.ticker]?.color || '#6B7280' }}
+                                                                style={{ backgroundColor: dynamicETFInfo[etf.ticker]?.color || '#6B7280' }}
                                                             />
                                                             <span className="text-zinc-300 font-medium">{etf.ticker}</span>
-                                                            <span className="text-zinc-500 text-sm">{ETF_INFO[etf.ticker]?.institution}</span>
+                                                            <span className="text-zinc-500 text-sm">{dynamicETFInfo[etf.ticker]?.institution}</span>
                                                         </div>
                                                         <span className={`font-bold ${etf.flow_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                                             {etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}
@@ -685,7 +730,7 @@ export default function XRPDashboard() {
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(displayData.length)} height={50} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeDasharray="3 3" />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} />} />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]}>
                                         {displayData.map((entry, index) => (
                                             <Cell
@@ -714,7 +759,7 @@ export default function XRPDashboard() {
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeWidth={2} />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} />} />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Area
                                         type="monotone"
                                         dataKey="net_flow"
@@ -738,7 +783,7 @@ export default function XRPDashboard() {
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeWidth={2} strokeDasharray="5 5" />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} />} />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Line
                                         type="monotone"
                                         dataKey="net_flow"
@@ -764,7 +809,7 @@ export default function XRPDashboard() {
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeWidth={2} />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} />} />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]}>
                                         {displayData.map((entry, index) => (
                                             <Cell
@@ -807,13 +852,13 @@ export default function XRPDashboard() {
                                 <div key={etf.ticker} className="flex items-center gap-3 bg-zinc-800/50 p-3 rounded-lg">
                                     <div
                                         className="w-3 h-3 rounded-full flex-shrink-0"
-                                        style={{ backgroundColor: ETF_INFO[etf.ticker]?.color || '#6B7280' }}
+                                        style={{ backgroundColor: dynamicETFInfo[etf.ticker]?.color || '#6B7280' }}
                                     />
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-bold text-white">{etf.ticker}</span>
                                             <span className="text-xs text-zinc-500">•</span>
-                                            <span className="text-xs text-zinc-400 truncate">{ETF_INFO[etf.ticker]?.institution || 'Unknown'}</span>
+                                            <span className="text-xs text-zinc-400 truncate">{dynamicETFInfo[etf.ticker]?.institution || 'Unknown'}</span>
                                         </div>
                                         <div className="text-sm font-medium text-green-400">${formatFlow(etf.flow_usd)}</div>
                                     </div>
