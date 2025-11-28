@@ -641,7 +641,7 @@ export default function XRPDashboard() {
                         ) : (
                         <ResponsiveContainer width="95%" height={380}>
                             {chartType === 'bar' ? (
-                                <BarChart data={displayData} margin={{ top: 20, right: 20, left: 80, bottom: 5 }}>
+                                <BarChart data={displayData} margin={{ top: 20, right: 20, left: 80, bottom: 40 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
@@ -660,7 +660,7 @@ export default function XRPDashboard() {
                                         </filter>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
+                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 10, fill: '#9CA3AF', angle: -45, textAnchor: 'end' }} axisLine={{ stroke: '#4B5563' }} interval={0} height={60} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeDasharray="3 3" />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} />} />
@@ -677,7 +677,7 @@ export default function XRPDashboard() {
                                     </Bar>
                                 </BarChart>
                             ) : chartType === 'area' ? (
-                                <AreaChart data={displayData} margin={{ top: 20, right: 20, left: 80, bottom: 5 }}>
+                                <AreaChart data={displayData} margin={{ top: 20, right: 20, left: 80, bottom: 40 }}>
                                     <defs>
                                         <linearGradient id="areaGradientPositive" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={0.6} />
@@ -704,7 +704,7 @@ export default function XRPDashboard() {
                                     />
                                 </AreaChart>
                             ) : chartType === 'line' ? (
-                                <LineChart data={displayData} margin={{ top: 20, right: 20, left: 80, bottom: 5 }}>
+                                <LineChart data={displayData} margin={{ top: 20, right: 20, left: 80, bottom: 40 }}>
                                     <defs>
                                         <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
                                             <stop offset="0%" stopColor="#3B82F6" />
@@ -727,7 +727,7 @@ export default function XRPDashboard() {
                                     />
                                 </LineChart>
                             ) : chartType === 'composed' ? (
-                                <ComposedChart data={displayData} margin={{ top: 20, right: 20, left: 80, bottom: 5 }}>
+                                <ComposedChart data={displayData} margin={{ top: 20, right: 20, left: 80, bottom: 40 }}>
                                     <defs>
                                         <linearGradient id="composedGreenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={0.8} />
