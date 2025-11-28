@@ -708,7 +708,8 @@ export default function XRPDashboard() {
                                 )}
                             </div>
                         ) : (
-                        <ResponsiveContainer width="100%" height={280} className="sm:!h-[380px]">
+                        <div className="h-[320px] sm:h-[450px]">
+                        <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
                                 <BarChart data={displayData} margin={{ top: 10, right: 10, left: 40, bottom: 30 }}>
                                     <defs>
@@ -832,6 +833,7 @@ export default function XRPDashboard() {
                                 </ComposedChart>
                             ) : null}
                         </ResponsiveContainer>
+                        </div>
                         )}
                     </div>
                 ) : (
