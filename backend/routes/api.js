@@ -229,6 +229,24 @@ router.get('/xrp-exchange-balances', async (req, res) => {
     }
 });
 
+// Debug endpoint to check raw exchange data
+router.get('/debug/exchange-raw', async (req, res) => {
+    try {
+        const balances = await coinGlass.getXRPExchangeReserves();
+        if (!balances || balances.length === 0) {
+            return res.json({ error: 'No data', raw: balances });
+        }
+        // Return first 2 exchanges with all their fields
+        res.json({
+            count: balances.length,
+            sample: balances.slice(0, 2),
+            allFields: Object.keys(balances[0] || {})
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Debug endpoint to check data sources
 router.get('/debug/etf-sources', async (req, res) => {
     try {

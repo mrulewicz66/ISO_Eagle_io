@@ -884,8 +884,8 @@ export default function XRPDashboard() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-right text-white">{formatXRP(ex.balance)}</td>
-                                        <td className={`px-4 py-3 text-sm text-right font-medium ${ex.change_1d_pct <= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {ex.change_1d_pct > 0 ? '+' : ''}{ex.change_1d_pct?.toFixed(2)}%
+                                        <td className={`px-4 py-3 text-sm text-right font-medium ${ex.change_1d_pct === 0 ? 'text-zinc-500' : ex.change_1d_pct < 0 ? 'text-green-400' : 'text-red-400'}`} title={ex.change_1d_pct === 0 ? 'CoinGlass does not provide 24h change data for XRP' : undefined}>
+                                            {ex.change_1d_pct === 0 ? 'N/A' : `${ex.change_1d_pct > 0 ? '+' : ''}${ex.change_1d_pct?.toFixed(2)}%`}
                                         </td>
                                         <td className={`px-4 py-3 text-sm text-right font-medium ${ex.change_7d_pct <= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                             {ex.change_7d_pct > 0 ? '+' : ''}{ex.change_7d_pct?.toFixed(2)}%
@@ -899,10 +899,13 @@ export default function XRPDashboard() {
                         </table>
                     </div>
 
-                    <div className="mt-4 p-4 bg-zinc-800/50 rounded-lg">
+                    <div className="mt-4 p-4 bg-zinc-800/50 rounded-lg space-y-2">
                         <p className="text-xs text-zinc-400">
                             <span className="text-green-400">Green = XRP leaving exchanges</span> (bullish: users moving to self-custody) |
                             <span className="text-red-400 ml-1">Red = XRP entering exchanges</span> (bearish: potential sell pressure)
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                            Note: 24h change shows N/A because CoinGlass does not currently provide intraday data for XRP exchange balances.
                         </p>
                     </div>
                 </div>

@@ -132,6 +132,30 @@ class CoinGlassService {
         }
     }
 
+    async getExchangeBalanceChart(symbol = 'XRP') {
+        if (!this.apiKey) {
+            return null;
+        }
+
+        try {
+            const response = await axios.get(
+                `${this.baseURL}/exchange/balance/chart`,
+                {
+                    params: { symbol: symbol.toUpperCase(), time_type: 'h24' },
+                    headers: this.headers
+                }
+            );
+
+            if (response.data?.code === '0' && response.data?.data) {
+                return response.data.data;
+            }
+            return null;
+        } catch (error) {
+            console.error('CoinGlass Exchange Balance Chart API Error:', error.message);
+            return null;
+        }
+    }
+
     async getExchangeBalance(symbol = 'XRP') {
         if (!this.apiKey) {
             console.log('CoinGlass API key not configured');
@@ -139,22 +163,71 @@ class CoinGlassService {
         }
 
         try {
-            // Try the balance list endpoint
-            const response = await axios.get(
-                `${this.baseURL}/exchange/balance/list`,
-                {
-                    params: { symbol: symbol.toUpperCase() },
-                    headers: this.headers
-                }
-            );
+            // Fetch both list and chart data in parallel
+            const [listResponse, chartData] = await Promise.all([
+                axios.get(
+                    `${this.baseURL}/exchange/balance/list`,
+                    {
+                        params: { symbol: symbol.toUpperCase() },
+                        headers: this.headers
+                    }
+                ),
+                this.getExchangeBalanceChart(symbol)
+            ]);
 
-            const errData = response.data;
+            const errData = listResponse.data;
             if (errData?.code === '400' && errData?.msg === 'Upgrade plan') {
                 console.log(`CoinGlass: ${symbol} exchange balance requires plan upgrade ($18/mo Hobbyist)`);
                 return null;
             }
 
-            return response.data.data || [];
+            let balances = listResponse.data.data || [];
+
+            // If we have chart data, calculate 24h change from it
+            if (chartData && chartData.time_list && chartData.data_map) {
+                const timeList = chartData.time_list;
+                const now = Date.now();
+                const oneDayAgo = now - 24 * 60 * 60 * 1000;
+
+                // Find the index of the most recent timestamp and ~24h ago
+                let latestIdx = timeList.length - 1;
+                let dayAgoIdx = -1;
+
+                // Find closest timestamp to 24h ago
+                for (let i = timeList.length - 1; i >= 0; i--) {
+                    if (timeList[i] <= oneDayAgo) {
+                        dayAgoIdx = i;
+                        break;
+                    }
+                }
+
+                // Enhance balance data with calculated 24h changes
+                if (dayAgoIdx >= 0 && latestIdx > dayAgoIdx) {
+                    balances = balances.map(b => {
+                        const exchangeName = b.exchange_name;
+                        const exchangeData = chartData.data_map[exchangeName];
+
+                        if (exchangeData && exchangeData[latestIdx] != null && exchangeData[dayAgoIdx] != null) {
+                            const latestBalance = exchangeData[latestIdx];
+                            const dayAgoBalance = exchangeData[dayAgoIdx];
+                            const change1d = latestBalance - dayAgoBalance;
+                            const changePct1d = dayAgoBalance !== 0
+                                ? ((change1d / dayAgoBalance) * 100)
+                                : 0;
+
+                            // Only override if original is 0
+                            return {
+                                ...b,
+                                balance_change_1d: b.balance_change_1d !== 0 ? b.balance_change_1d : change1d,
+                                balance_change_percent_1d: b.balance_change_percent_1d !== 0 ? b.balance_change_percent_1d : parseFloat(changePct1d.toFixed(2))
+                            };
+                        }
+                        return b;
+                    });
+                }
+            }
+
+            return balances;
         } catch (error) {
             const errData = error.response?.data;
             if (errData?.code === '400' && errData?.msg === 'Upgrade plan') {
