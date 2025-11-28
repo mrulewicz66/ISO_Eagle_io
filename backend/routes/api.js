@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const CoinGlassService = require('../services/coinGlassService');
+const SoSoValueService = require('../services/sosoValueService');
 
-// Initialize CoinGlass service
+// Initialize services
 const coinGlass = new CoinGlassService(process.env.COINGLASS_API_KEY);
+const sosoValue = new SoSoValueService(process.env.SOSOVALUE_API_KEY);
 
 // Get latest ETF flows
 router.get('/etf-flows', async (req, res) => {
@@ -115,27 +117,69 @@ router.get('/dashboard-summary', async (req, res) => {
     }
 });
 
-// Get XRP ETF flows from CoinGlass (real-time)
+// Get XRP ETF flows from multiple sources (CoinGlass + SoSoValue fallback)
 router.get('/xrp-etf-flows', async (req, res) => {
     try {
-        const flows = await coinGlass.getXRPETFFlows();
-        if (!flows) {
-            return res.status(503).json({ error: 'CoinGlass API unavailable or upgrade required' });
+        // Fetch from both sources in parallel
+        const [coinGlassFlows, sosoFlows] = await Promise.allSettled([
+            coinGlass.getXRPETFFlows(),
+            sosoValue.getXRPETFFlows()
+        ]);
+
+        let allFlows = [];
+
+        // Transform CoinGlass data
+        if (coinGlassFlows.status === 'fulfilled' && coinGlassFlows.value) {
+            const cgFlows = coinGlassFlows.value.map(flow => ({
+                date: new Date(flow.timestamp).toISOString().split('T')[0],
+                timestamp: flow.timestamp,
+                net_flow: flow.flow_usd,
+                price_usd: flow.price_usd,
+                etf_breakdown: flow.etf_flows?.map(etf => ({
+                    ticker: etf.etf_ticker,
+                    flow_usd: etf.flow_usd || 0
+                })) || [],
+                source: 'coinglass'
+            }));
+            allFlows = [...allFlows, ...cgFlows];
+            console.log(`CoinGlass XRP ETF: ${cgFlows.length} records, latest: ${cgFlows[cgFlows.length - 1]?.date || 'none'}`);
         }
 
-        // Transform data for frontend
-        const transformedFlows = flows.map(flow => ({
-            date: new Date(flow.timestamp).toISOString().split('T')[0],
-            timestamp: flow.timestamp,
-            net_flow: flow.flow_usd,
-            price_usd: flow.price_usd,
-            etf_breakdown: flow.etf_flows?.map(etf => ({
-                ticker: etf.etf_ticker,
-                flow_usd: etf.flow_usd || 0
-            })) || []
-        }));
+        // Transform SoSoValue data
+        if (sosoFlows.status === 'fulfilled' && sosoFlows.value && sosoFlows.value.length > 0) {
+            const ssFlows = sosoFlows.value.map(flow => ({
+                date: flow.date,
+                timestamp: new Date(flow.date).getTime(),
+                net_flow: flow.totalNetInflow,
+                price_usd: null, // SoSoValue doesn't include price
+                etf_breakdown: [],
+                source: 'sosovalue'
+            }));
+            allFlows = [...allFlows, ...ssFlows];
+            console.log(`SoSoValue XRP ETF: ${ssFlows.length} records, latest: ${ssFlows[ssFlows.length - 1]?.date || 'none'}`);
+        }
 
-        res.json(transformedFlows);
+        if (allFlows.length === 0) {
+            return res.status(503).json({ error: 'No XRP ETF data available from any source' });
+        }
+
+        // Merge data by date, preferring CoinGlass (more detailed) over SoSoValue
+        const flowsByDate = new Map();
+        for (const flow of allFlows) {
+            const existing = flowsByDate.get(flow.date);
+            // Prefer CoinGlass data (has ETF breakdown and price), or take newer data
+            if (!existing || (flow.source === 'coinglass' && existing.source !== 'coinglass')) {
+                flowsByDate.set(flow.date, flow);
+            }
+        }
+
+        // Sort by date ascending
+        const mergedFlows = Array.from(flowsByDate.values())
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        console.log(`Merged XRP ETF: ${mergedFlows.length} records, latest: ${mergedFlows[mergedFlows.length - 1]?.date || 'none'}`);
+
+        res.json(mergedFlows);
     } catch (error) {
         console.error('Error fetching XRP ETF flows:', error);
         res.status(500).json({ error: error.message });
@@ -181,6 +225,52 @@ router.get('/xrp-exchange-balances', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching XRP exchange balances:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Debug endpoint to check data sources
+router.get('/debug/etf-sources', async (req, res) => {
+    try {
+        const [cgResult, ssResult] = await Promise.allSettled([
+            coinGlass.getXRPETFFlows(),
+            sosoValue.getXRPETFFlows()
+        ]);
+
+        const coinGlassData = cgResult.status === 'fulfilled' ? cgResult.value : null;
+        const sosoData = ssResult.status === 'fulfilled' ? ssResult.value : null;
+
+        const cgLatest = coinGlassData?.length > 0
+            ? new Date(coinGlassData[coinGlassData.length - 1].timestamp).toISOString().split('T')[0]
+            : null;
+        const ssLatest = sosoData?.length > 0
+            ? sosoData[sosoData.length - 1].date
+            : null;
+
+        res.json({
+            timestamp: new Date().toISOString(),
+            coinglass: {
+                status: cgResult.status,
+                error: cgResult.reason?.message || null,
+                recordCount: coinGlassData?.length || 0,
+                latestDate: cgLatest,
+                last3Records: coinGlassData?.slice(-3).map(r => ({
+                    date: new Date(r.timestamp).toISOString().split('T')[0],
+                    flow_usd: r.flow_usd
+                })) || []
+            },
+            sosovalue: {
+                status: ssResult.status,
+                error: ssResult.reason?.message || null,
+                recordCount: sosoData?.length || 0,
+                latestDate: ssLatest,
+                last3Records: sosoData?.slice(-3).map(r => ({
+                    date: r.date,
+                    totalNetInflow: r.totalNetInflow
+                })) || []
+            }
+        });
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
