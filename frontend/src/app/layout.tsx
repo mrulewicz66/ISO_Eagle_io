@@ -13,8 +13,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Crypto Monitor - ETF Flows & Exchange Reserves",
-    description: "Real-time monitoring of crypto ETF inflows/outflows and exchange supply for top cryptocurrencies and ISO 20022 compliant coins.",
+    title: "ISO Eagle - XRP ETF Monitor & Exchange Reserves",
+    description: "Real-time XRP ETF flow tracking, exchange reserves monitoring, and ISO 20022 compliant token prices. Track institutional crypto adoption.",
+    metadataBase: new URL('https://isoeagle.io'),
+    openGraph: {
+        title: "ISO Eagle - XRP ETF Monitor",
+        description: "Real-time XRP ETF flows, exchange reserves, and ISO 20022 token tracking. Monitor institutional crypto adoption.",
+        url: 'https://isoeagle.io',
+        siteName: 'ISO Eagle',
+        locale: 'en_US',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: "ISO Eagle - XRP ETF Monitor",
+        description: "Real-time XRP ETF flows, exchange reserves, and ISO 20022 token tracking.",
+    },
 };
 
 export default function RootLayout({
