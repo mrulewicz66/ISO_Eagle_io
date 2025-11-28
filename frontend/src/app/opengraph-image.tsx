@@ -34,6 +34,33 @@ export default async function Image() {
                         textAlign: 'center',
                     }}
                 >
+                    {/* Logo */}
+                    <div
+                        style={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: '50%',
+                            backgroundColor: '#2F2F2F',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: 24,
+                            overflow: 'hidden',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                        }}
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src="https://isoeagle.io/iso-eagle.png"
+                            alt="ISO Eagle"
+                            width={120}
+                            height={120}
+                            style={{
+                                transform: 'scale(1.15) translateY(6%)',
+                            }}
+                        />
+                    </div>
+
                     {/* Title */}
                     <div
                         style={{
