@@ -62,21 +62,24 @@ export default function Home() {
                 {/* ========== SUPPORT SECTION ========== */}
                 <section className="pt-8 border-t border-zinc-800">
                     <div className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 p-6 rounded-xl border border-amber-500/30">
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4">
                             <div className="text-4xl">☕</div>
                             <div className="flex-1">
                                 <h3 className="text-lg font-bold text-amber-200">Support This Dashboard</h3>
-                                <p className="text-amber-100/70 text-sm">
-                                    Help upgrade to commercial API access for more real-time data, historical charts, and additional features.
+                                <p className="text-amber-100/70 text-sm mt-1">
+                                    This dashboard relies on premium API subscriptions to bring you real-time ETF flows, exchange reserves, and price data. These services cost $50-200+/month to maintain.
+                                </p>
+                                <p className="text-amber-100/50 text-xs mt-2">
+                                    Your support helps cover API costs and enables new features like historical charts, alerts, and additional token tracking.
                                 </p>
                             </div>
                             <a
                                 href="https://buymeacoffee.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-lg transition-colors"
+                                className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-lg transition-colors whitespace-nowrap"
                             >
-                                Donate
+                                Buy Me a Coffee
                             </a>
                         </div>
                     </div>
