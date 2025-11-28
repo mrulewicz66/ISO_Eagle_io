@@ -102,44 +102,44 @@ export default function ISO20022Table() {
     }
 
     return (
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow border-2 border-purple-500">
-            <div className="flex items-center justify-between mb-4">
+        <div className="bg-white dark:bg-zinc-900 p-3 sm:p-6 rounded-lg shadow border-2 border-purple-500">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
+                    <h2 className="text-lg sm:text-2xl font-bold text-zinc-900 dark:text-white">
                         ISO 20022 Compliant Tokens
                     </h2>
-                    <p className="text-sm text-purple-600 dark:text-purple-400 mt-1">
-                        Cryptocurrencies aligned with global financial messaging standards
+                    <p className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 mt-1">
+                        Cryptocurrencies aligned with SWIFT standards
                     </p>
                 </div>
-                <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-3 py-1 rounded-full">
+                <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full self-start sm:self-auto">
                     SWIFT Compatible
                 </span>
             </div>
 
-            {error && <div className="text-red-500 mb-4">{error}</div>}
+            {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
                 <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
                     <thead className="bg-purple-50 dark:bg-purple-900/20">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                            <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                                 Token
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                            <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider hidden md:table-cell">
                                 Use Case
                             </th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                            <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                                 Price
                             </th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                24h %
+                            <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                24h
                             </th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                Market Cap
+                            <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider hidden sm:table-cell">
+                                MCap
                             </th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                24h Volume
+                            <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider hidden lg:table-cell">
+                                Volume
                             </th>
                         </tr>
                     </thead>
@@ -148,11 +148,11 @@ export default function ISO20022Table() {
                             const priceData = getPriceData(token.symbol);
                             return (
                                 <tr key={token.symbol} className="hover:bg-purple-50 dark:hover:bg-purple-900/10">
-                                    <td className="px-4 py-4 whitespace-nowrap">
+                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
                                         <div className="flex items-center">
-                                            <div className="relative w-8 h-8 mr-3">
+                                            <div className="relative w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 flex-shrink-0">
                                                 {/* Fallback always rendered behind */}
-                                                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                                                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-[8px] sm:text-xs font-bold">
                                                     {token.symbol.slice(0, 2)}
                                                 </div>
                                                 {/* Logo image overlays fallback */}
@@ -160,40 +160,40 @@ export default function ISO20022Table() {
                                                     <img
                                                         src={TOKEN_LOGOS[token.symbol]}
                                                         alt={token.symbol}
-                                                        className="absolute inset-0 w-8 h-8 rounded-full object-cover bg-zinc-800"
+                                                        className="absolute inset-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover bg-zinc-800"
                                                         onError={(e) => {
                                                             (e.target as HTMLImageElement).style.display = 'none';
                                                         }}
                                                     />
                                                 )}
                                             </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-zinc-900 dark:text-white">
+                                            <div className="min-w-0">
+                                                <div className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-white">
                                                     {token.symbol}
                                                 </div>
-                                                <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                                                <div className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate">
                                                     {token.name}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
+                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 hidden md:table-cell">
                                         {token.description}
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-medium text-zinc-900 dark:text-white">
+                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right font-medium text-zinc-900 dark:text-white">
                                         {priceData ? formatCurrency(priceData.price_usd) : '-'}
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-semibold">
+                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right font-semibold">
                                         {priceData && priceData.price_change_24h ? (
                                             <span className={parseFloat(priceData.price_change_24h) >= 0 ? 'text-green-500' : 'text-red-500'}>
                                                 {parseFloat(priceData.price_change_24h) >= 0 ? '+' : ''}{parseFloat(priceData.price_change_24h).toFixed(2)}%
                                             </span>
                                         ) : '-'}
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-zinc-500 dark:text-zinc-400">
+                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right text-zinc-500 dark:text-zinc-400 hidden sm:table-cell">
                                         {priceData ? formatCurrency(priceData.market_cap) : '-'}
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-zinc-500 dark:text-zinc-400">
+                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right text-zinc-500 dark:text-zinc-400 hidden lg:table-cell">
                                         {priceData ? formatCurrency(priceData.volume_24h) : '-'}
                                     </td>
                                 </tr>

@@ -8,11 +8,11 @@ export default function Home() {
     return (
         <div className="min-h-screen bg-zinc-950">
             {/* Header */}
-            <header className="bg-zinc-900 border-b border-zinc-800 p-4">
-                <div className="container mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3">
+            <header className="bg-zinc-900 border-b border-zinc-800 px-3 py-3 sm:p-4">
+                <div className="container mx-auto flex justify-between items-center gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         <div
-                            className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden"
+                            className="w-10 h-10 sm:w-16 sm:h-16 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
                             style={{ backgroundColor: '#2F2F2F' }}
                             title="ISO Eagle"
                         >
@@ -24,16 +24,16 @@ export default function Home() {
                                 }}
                             />
                         </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-white">ISO Eagle</h1>
-                            <p className="text-xs text-zinc-400">XRP & ISO 20022 Focus</p>
+                        <div className="min-w-0">
+                            <h1 className="text-lg sm:text-xl font-bold text-white truncate">ISO Eagle</h1>
+                            <p className="text-xs text-zinc-400 truncate">XRP & ISO 20022 Focus</p>
                         </div>
                     </div>
                     <ConnectionStatus />
                 </div>
             </header>
 
-            <main className="container mx-auto p-6 space-y-8">
+            <main className="container mx-auto px-3 py-4 sm:p-6 space-y-6 sm:space-y-8">
 
                 {/* ========== PRIMARY SECTION: XRP ========== */}
                 <section>
@@ -60,16 +60,16 @@ export default function Home() {
                 </section>
 
                 {/* ========== SUPPORT SECTION ========== */}
-                <section className="pt-8 border-t border-zinc-800">
-                    <div className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 p-6 rounded-xl border border-amber-500/30">
-                        <div className="flex flex-col md:flex-row md:items-center gap-4">
-                            <div className="text-4xl">☕</div>
+                <section className="pt-6 sm:pt-8 border-t border-zinc-800">
+                    <div className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 p-4 sm:p-6 rounded-xl border border-amber-500/30">
+                        <div className="flex flex-col md:flex-row md:items-center gap-3 sm:gap-4">
+                            <div className="text-3xl sm:text-4xl">☕</div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-amber-200">Support This Dashboard</h3>
-                                <p className="text-amber-100/70 text-sm mt-1">
-                                    This dashboard relies on premium API subscriptions to bring you real-time ETF flows, exchange reserves, and price data. These services cost $50-200+/month to maintain.
+                                <h3 className="text-base sm:text-lg font-bold text-amber-200">Support This Dashboard</h3>
+                                <p className="text-amber-100/70 text-xs sm:text-sm mt-1">
+                                    This dashboard relies on premium API subscriptions. These services cost $50-200+/month to maintain.
                                 </p>
-                                <p className="text-amber-100/50 text-xs mt-2">
+                                <p className="text-amber-100/50 text-[10px] sm:text-xs mt-1 sm:mt-2 hidden sm:block">
                                     Your support helps cover API costs and enables new features like historical charts, alerts, and additional token tracking.
                                 </p>
                             </div>
@@ -77,7 +77,7 @@ export default function Home() {
                                 href="https://buymeacoffee.com/isoeagle.io"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-lg transition-colors whitespace-nowrap"
+                                className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-colors whitespace-nowrap text-sm sm:text-base self-start md:self-auto"
                             >
                                 Buy Me a Coffee
                             </a>
@@ -88,13 +88,12 @@ export default function Home() {
             </main>
 
             {/* Footer */}
-            <footer className="bg-zinc-900 border-t border-zinc-800 p-6 mt-12">
+            <footer className="bg-zinc-900 border-t border-zinc-800 px-3 py-4 sm:p-6 mt-8 sm:mt-12">
                 <div className="container mx-auto text-center">
-                    <p className="text-sm text-zinc-500">
-                        Data provided by CoinGecko, CoinGlass, and CryptoQuant.
-                        Not financial advice. ISO 20022 compliance status may vary.
+                    <p className="text-xs sm:text-sm text-zinc-500">
+                        Data: CoinGecko, CoinGlass, CryptoQuant. Not financial advice.
                     </p>
-                    <p className="text-xs text-zinc-600 mt-2">
+                    <p className="text-[10px] sm:text-xs text-zinc-600 mt-1 sm:mt-2">
                         XRP ETF data is for informational purposes only.
                     </p>
                 </div>
