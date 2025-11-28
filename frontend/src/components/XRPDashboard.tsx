@@ -218,10 +218,10 @@ export default function XRPDashboard() {
                 if (flows.length > 0) {
                     // Sort by date ascending for chart
                     const sorted = [...flows].sort((a, b) => a.timestamp - b.timestamp);
-                    // Format dates for display
+                    // Format dates for display (use UTC to avoid timezone shift)
                     const formatted = sorted.map(f => ({
                         ...f,
-                        displayDate: new Date(f.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        displayDate: new Date(f.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
                     }));
                     setEtfFlows(formatted);
 
