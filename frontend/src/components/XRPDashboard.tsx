@@ -497,7 +497,7 @@ export default function XRPDashboard() {
                             ${priceData?.price_usd.toFixed(4) || '-'}
                         </div>
                         <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/10">
-                            <div className="text-blue-200/60 text-[10px] sm:text-xs">24h Change</div>
+                            <div className="text-blue-100 text-[10px] sm:text-xs">24h Change</div>
                             {priceData && priceData.price_change_24h !== 0 ? (
                                 <span className={`text-xs sm:text-sm font-bold ${priceData.price_change_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                     {priceData.price_change_24h >= 0 ? '+' : ''}{priceData.price_change_24h.toFixed(2)}%
@@ -513,8 +513,8 @@ export default function XRPDashboard() {
                             {priceData ? formatNumber(priceData.market_cap) : '-'}
                         </div>
                         <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/10">
-                            <div className="text-blue-200/60 text-[10px] sm:text-xs">24h Volume</div>
-                            <span className="text-xs sm:text-sm font-medium text-blue-200">
+                            <div className="text-blue-100 text-[10px] sm:text-xs">24h Volume</div>
+                            <span className="text-xs sm:text-sm font-semibold text-white">
                                 {priceData ? formatNumber(priceData.volume_24h) : '-'}
                             </span>
                         </div>
@@ -526,14 +526,14 @@ export default function XRPDashboard() {
                         </div>
                         <div className="flex justify-between items-center mt-2 pt-2 border-t border-green-500/20">
                             <div>
-                                <div className="text-green-300/60 text-[10px] sm:text-xs">Daily (24h)</div>
+                                <div className="text-green-200 text-[10px] sm:text-xs">Daily (24h)</div>
                                 <div className={`text-xs sm:text-sm font-bold ${displayDailyInflow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                     {displayDailyInflow >= 0 ? '+' : ''}${formatFlow(displayDailyInflow)}
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-green-300/60 text-[10px] sm:text-xs">Avg/day</div>
-                                <div className="text-xs sm:text-sm font-medium text-green-300">
+                                <div className="text-green-200 text-[10px] sm:text-xs">Avg/day</div>
+                                <div className="text-xs sm:text-sm font-semibold text-white">
                                     ${formatFlow(displayAvgDaily)}
                                 </div>
                             </div>
@@ -546,14 +546,14 @@ export default function XRPDashboard() {
                         </div>
                         <div className="flex justify-between items-center mt-2 pt-2 border-t border-red-500/20">
                             <div>
-                                <div className="text-red-300/60 text-[10px] sm:text-xs">Daily (24h)</div>
-                                <div className={`text-xs sm:text-sm font-bold ${displayDailyInflow < 0 ? 'text-red-400' : 'text-zinc-500'}`}>
+                                <div className="text-red-200 text-[10px] sm:text-xs">Daily (24h)</div>
+                                <div className={`text-xs sm:text-sm font-bold ${displayDailyInflow < 0 ? 'text-red-400' : 'text-zinc-400'}`}>
                                     {displayDailyInflow < 0 ? `-$${formatFlow(Math.abs(displayDailyInflow))}` : '$0'}
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-red-300/60 text-[10px] sm:text-xs">Avg/day</div>
-                                <div className="text-xs sm:text-sm font-medium text-red-300">
+                                <div className="text-red-200 text-[10px] sm:text-xs">Avg/day</div>
+                                <div className="text-xs sm:text-sm font-semibold text-white">
                                     ${formatFlow(displayDaysTracked > 0 ? displayTotalOutflow / displayDaysTracked : 0)}
                                 </div>
                             </div>

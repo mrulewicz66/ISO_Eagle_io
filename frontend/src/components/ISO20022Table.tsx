@@ -190,10 +190,10 @@ export default function ISO20022Table() {
                                             </span>
                                         ) : '-'}
                                     </td>
-                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right text-zinc-500 dark:text-zinc-400 hidden sm:table-cell">
+                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right font-medium text-zinc-900 dark:text-white hidden sm:table-cell">
                                         {priceData ? formatCurrency(priceData.market_cap) : '-'}
                                     </td>
-                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right text-zinc-500 dark:text-zinc-400 hidden lg:table-cell">
+                                    <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right font-medium text-zinc-900 dark:text-white hidden lg:table-cell">
                                         {priceData ? formatCurrency(priceData.volume_24h) : '-'}
                                     </td>
                                 </tr>
