@@ -390,7 +390,7 @@ const getXAxisInterval = (dataLength: number): number | 'preserveStartEnd' => {
 // Custom tooltip component for ETF flow charts
 const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumulative, showBTCComparison, showETHComparison }: {
     active?: boolean;
-    payload?: Array<{ payload: ETFFlow & { displayDate: string; btc_cumulative_flow?: number | null; eth_cumulative_flow?: number | null } }>;
+    payload?: Array<{ payload: ETFFlow & { displayDate: string; btc_daily_flow?: number | null; btc_cumulative_flow?: number | null; eth_daily_flow?: number | null; eth_cumulative_flow?: number | null } }>;
     label?: string;
     formatFlow: (num: number) => string;
     etfInfo: { [key: string]: { color: string; institution: string } };
@@ -403,7 +403,9 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
     const data = payload[0].payload;
     const netFlow = data.net_flow;
     const cumulativeFlow = data.cumulative_flow || 0;
+    const btcDailyFlow = data.btc_daily_flow;
     const btcCumulativeFlow = data.btc_cumulative_flow;
+    const ethDailyFlow = data.eth_daily_flow;
     const ethCumulativeFlow = data.eth_cumulative_flow;
     const etfBreakdown = data.etf_breakdown || [];
     const dayStatus = data.dayStatus;
@@ -465,17 +467,29 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
                     {showBTCComparison && showCumulative && btcCumulativeFlow !== null && btcCumulativeFlow !== undefined && (
                         <div style={{ marginBottom: '8px' }}>
                             <span style={{ color: '#9CA3AF', fontSize: '12px' }}>BTC ETF (same day): </span>
-                            <span style={{ color: '#F97316', fontWeight: 600 }}>
-                                {btcCumulativeFlow >= 0 ? '+' : ''}${formatFlow(btcCumulativeFlow)}
+                            <span style={{ color: btcDailyFlow !== null && btcDailyFlow !== undefined && btcDailyFlow >= 0 ? '#F97316' : '#f87171', fontWeight: 600 }}>
+                                {btcDailyFlow !== null && btcDailyFlow !== undefined ? `${btcDailyFlow >= 0 ? '+' : ''}$$${formatFlow(btcDailyFlow)}` : 'N/A'}
                             </span>
+                            <div style={{ marginLeft: '0px', marginTop: '2px' }}>
+                                <span style={{ color: '#6B7280', fontSize: '11px' }}>Cumulative: </span>
+                                <span style={{ color: btcCumulativeFlow >= 0 ? '#F97316' : '#f87171', fontWeight: 600, fontSize: '11px' }}>
+                                    {btcCumulativeFlow >= 0 ? '+' : ''}${formatFlow(btcCumulativeFlow)}
+                                </span>
+                            </div>
                         </div>
                     )}
                     {showETHComparison && showCumulative && ethCumulativeFlow !== null && ethCumulativeFlow !== undefined && (
                         <div style={{ marginBottom: '8px' }}>
                             <span style={{ color: '#9CA3AF', fontSize: '12px' }}>ETH ETF (same day): </span>
-                            <span style={{ color: '#A855F7', fontWeight: 600 }}>
-                                {ethCumulativeFlow >= 0 ? '+' : ''}${formatFlow(ethCumulativeFlow)}
+                            <span style={{ color: ethDailyFlow !== null && ethDailyFlow !== undefined && ethDailyFlow >= 0 ? '#A855F7' : '#f87171', fontWeight: 600 }}>
+                                {ethDailyFlow !== null && ethDailyFlow !== undefined ? `${ethDailyFlow >= 0 ? '+' : ''}$$${formatFlow(ethDailyFlow)}` : 'N/A'}
                             </span>
+                            <div style={{ marginLeft: '0px', marginTop: '2px' }}>
+                                <span style={{ color: '#6B7280', fontSize: '11px' }}>Cumulative: </span>
+                                <span style={{ color: ethCumulativeFlow >= 0 ? '#A855F7' : '#f87171', fontWeight: 600, fontSize: '11px' }}>
+                                    {ethCumulativeFlow >= 0 ? '+' : ''}${formatFlow(ethCumulativeFlow)}
+                                </span>
+                            </div>
                         </div>
                     )}
                     {data.price_usd && data.price_usd > 0 && (
@@ -925,17 +939,17 @@ export default function XRPDashboard() {
             }
         }
 
-        // Create maps of BTC and ETH cumulative flows by day index
-        const btcByDay = new Map<number, number>();
+        // Create maps of BTC and ETH flows by day index (both daily and cumulative)
+        const btcByDay = new Map<number, { daily: number; cumulative: number }>();
         if (btcComparisonData) {
             btcComparisonData.forEach(d => {
-                btcByDay.set(d.day, d.cumulative_flow);
+                btcByDay.set(d.day, { daily: d.net_flow, cumulative: d.cumulative_flow });
             });
         }
-        const ethByDay = new Map<number, number>();
+        const ethByDay = new Map<number, { daily: number; cumulative: number }>();
         if (ethComparisonData) {
             ethComparisonData.forEach(d => {
-                ethByDay.set(d.day, d.cumulative_flow);
+                ethByDay.set(d.day, { daily: d.net_flow, cumulative: d.cumulative_flow });
             });
         }
 
@@ -946,14 +960,16 @@ export default function XRPDashboard() {
             if (flow.dayStatus === 'trading') {
                 cumulative += flow.net_flow;
             }
-            // Get BTC/ETH cumulative for the same day index from start
-            const btcCumulative = btcByDay.get(index);
-            const ethCumulative = ethByDay.get(index);
+            // Get BTC/ETH flows for the same day index from start
+            const btcData = btcByDay.get(index);
+            const ethData = ethByDay.get(index);
             return {
                 ...flow,
                 cumulative_flow: cumulative,
-                btc_cumulative_flow: btcCumulative !== undefined ? btcCumulative : null,
-                eth_cumulative_flow: ethCumulative !== undefined ? ethCumulative : null
+                btc_daily_flow: btcData?.daily ?? null,
+                btc_cumulative_flow: btcData?.cumulative ?? null,
+                eth_daily_flow: ethData?.daily ?? null,
+                eth_cumulative_flow: ethData?.cumulative ?? null
             };
         });
     }, [baseData, timeRange, btcComparisonData, ethComparisonData]);
