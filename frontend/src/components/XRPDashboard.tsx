@@ -16,7 +16,9 @@ interface ETFFlow {
         flow_usd: number;
     }[];
     displayDate?: string;
-    dayStatus?: 'trading' | 'weekend' | 'holiday' | 'pending';
+    dayStatus?: 'trading' | 'weekend' | 'holiday' | 'early_close' | 'pending';
+    dayName?: string;
+    dayNote?: string;
     cumulative_flow?: number;
 }
 
@@ -69,19 +71,139 @@ interface ExchangeHistoryData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-// US market holidays for 2025 (NYSE/NASDAQ closed)
-const US_MARKET_HOLIDAYS_2025 = [
-    '2025-01-01', // New Year's Day
-    '2025-01-20', // MLK Day
-    '2025-02-17', // Presidents Day
-    '2025-04-18', // Good Friday
-    '2025-05-26', // Memorial Day
-    '2025-06-19', // Juneteenth
-    '2025-07-04', // Independence Day
-    '2025-09-01', // Labor Day
-    '2025-11-27', // Thanksgiving
-    '2025-12-25', // Christmas
-];
+// ============ NYSE HOLIDAY CALENDAR (Dynamic for any year) ============
+
+interface MarketDay {
+    isHoliday: boolean;
+    isEarlyClose: boolean;
+    name?: string;
+    note?: string;
+}
+
+// Calculate Easter Sunday using the Anonymous Gregorian algorithm
+const getEasterSunday = (year: number): Date => {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(Date.UTC(year, month - 1, day));
+};
+
+// Get the nth occurrence of a weekday in a month (1-indexed)
+const getNthWeekdayOfMonth = (year: number, month: number, weekday: number, n: number): Date => {
+    const firstDay = new Date(Date.UTC(year, month, 1));
+    let dayOffset = (weekday - firstDay.getUTCDay() + 7) % 7;
+    const day = 1 + dayOffset + (n - 1) * 7;
+    return new Date(Date.UTC(year, month, day));
+};
+
+// Get the last occurrence of a weekday in a month
+const getLastWeekdayOfMonth = (year: number, month: number, weekday: number): Date => {
+    const lastDay = new Date(Date.UTC(year, month + 1, 0));
+    const diff = (lastDay.getUTCDay() - weekday + 7) % 7;
+    return new Date(Date.UTC(year, month, lastDay.getUTCDate() - diff));
+};
+
+// Adjust for observed holidays (if falls on weekend)
+const getObservedDate = (date: Date): Date => {
+    const day = date.getUTCDay();
+    if (day === 0) return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1)); // Sunday -> Monday
+    if (day === 6) return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() - 1)); // Saturday -> Friday
+    return date;
+};
+
+// Generate all NYSE holidays for a given year
+const generateNYSEHolidays = (year: number): Map<string, MarketDay> => {
+    const holidays = new Map<string, MarketDay>();
+    const fmt = (d: Date) => d.toISOString().split('T')[0];
+
+    // New Year's Day (Jan 1, observed)
+    const newYears = getObservedDate(new Date(Date.UTC(year, 0, 1)));
+    holidays.set(fmt(newYears), { isHoliday: true, isEarlyClose: false, name: "New Year's Day", note: "Markets closed" });
+
+    // Martin Luther King Jr. Day (3rd Monday of January)
+    const mlkDay = getNthWeekdayOfMonth(year, 0, 1, 3);
+    holidays.set(fmt(mlkDay), { isHoliday: true, isEarlyClose: false, name: "Martin Luther King Jr. Day", note: "Markets closed" });
+
+    // Presidents Day (3rd Monday of February)
+    const presidentsDay = getNthWeekdayOfMonth(year, 1, 1, 3);
+    holidays.set(fmt(presidentsDay), { isHoliday: true, isEarlyClose: false, name: "Presidents Day", note: "Markets closed" });
+
+    // Good Friday (Friday before Easter)
+    const easter = getEasterSunday(year);
+    const goodFriday = new Date(Date.UTC(easter.getUTCFullYear(), easter.getUTCMonth(), easter.getUTCDate() - 2));
+    holidays.set(fmt(goodFriday), { isHoliday: true, isEarlyClose: false, name: "Good Friday", note: "Markets closed" });
+
+    // Memorial Day (Last Monday of May)
+    const memorialDay = getLastWeekdayOfMonth(year, 4, 1);
+    holidays.set(fmt(memorialDay), { isHoliday: true, isEarlyClose: false, name: "Memorial Day", note: "Markets closed" });
+
+    // Juneteenth (June 19, observed)
+    const juneteenth = getObservedDate(new Date(Date.UTC(year, 5, 19)));
+    holidays.set(fmt(juneteenth), { isHoliday: true, isEarlyClose: false, name: "Juneteenth", note: "Markets closed" });
+
+    // Independence Day (July 4, observed)
+    const july4 = new Date(Date.UTC(year, 6, 4));
+    const july4Observed = getObservedDate(july4);
+    holidays.set(fmt(july4Observed), { isHoliday: true, isEarlyClose: false, name: "Independence Day", note: "Markets closed" });
+
+    // Day before July 4th - early close if July 4 is not on Monday/Saturday
+    const july3 = new Date(Date.UTC(year, 6, 3));
+    if (july4.getUTCDay() !== 1 && july4.getUTCDay() !== 6 && july3.getUTCDay() !== 0 && july3.getUTCDay() !== 6) {
+        holidays.set(fmt(july3), { isHoliday: false, isEarlyClose: true, name: "Independence Day Eve", note: "Early close at 1pm ET" });
+    }
+
+    // Labor Day (1st Monday of September)
+    const laborDay = getNthWeekdayOfMonth(year, 8, 1, 1);
+    holidays.set(fmt(laborDay), { isHoliday: true, isEarlyClose: false, name: "Labor Day", note: "Markets closed" });
+
+    // Thanksgiving (4th Thursday of November)
+    const thanksgiving = getNthWeekdayOfMonth(year, 10, 4, 4);
+    holidays.set(fmt(thanksgiving), { isHoliday: true, isEarlyClose: false, name: "Thanksgiving", note: "Markets closed" });
+
+    // Black Friday (Day after Thanksgiving) - early close
+    const blackFriday = new Date(Date.UTC(thanksgiving.getUTCFullYear(), thanksgiving.getUTCMonth(), thanksgiving.getUTCDate() + 1));
+    holidays.set(fmt(blackFriday), { isHoliday: false, isEarlyClose: true, name: "Black Friday", note: "Early close at 1pm ET - partial data expected" });
+
+    // Christmas (Dec 25, observed)
+    const christmas = new Date(Date.UTC(year, 11, 25));
+    const christmasObserved = getObservedDate(christmas);
+    holidays.set(fmt(christmasObserved), { isHoliday: true, isEarlyClose: false, name: "Christmas Day", note: "Markets closed" });
+
+    // Christmas Eve - early close if it's a weekday and not the observed Christmas
+    const christmasEve = new Date(Date.UTC(year, 11, 24));
+    if (christmasEve.getUTCDay() !== 0 && christmasEve.getUTCDay() !== 6 && fmt(christmasEve) !== fmt(christmasObserved)) {
+        holidays.set(fmt(christmasEve), { isHoliday: false, isEarlyClose: true, name: "Christmas Eve", note: "Early close at 1pm ET" });
+    }
+
+    return holidays;
+};
+
+// Cache holidays for multiple years
+const holidayCache = new Map<number, Map<string, MarketDay>>();
+const getHolidaysForYear = (year: number): Map<string, MarketDay> => {
+    if (!holidayCache.has(year)) {
+        holidayCache.set(year, generateNYSEHolidays(year));
+    }
+    return holidayCache.get(year)!;
+};
+
+// Get market day info for a specific date
+const getMarketDayInfo = (dateStr: string): MarketDay | null => {
+    const year = parseInt(dateStr.substring(0, 4));
+    const holidays = getHolidaysForYear(year);
+    return holidays.get(dateStr) || null;
+};
 
 // Check if a date is a weekend (Sat=6, Sun=0)
 const isWeekend = (date: Date): boolean => {
@@ -91,14 +213,22 @@ const isWeekend = (date: Date): boolean => {
 
 // Check if a date is a US market holiday
 const isMarketHoliday = (dateStr: string): boolean => {
-    return US_MARKET_HOLIDAYS_2025.includes(dateStr);
+    const info = getMarketDayInfo(dateStr);
+    return info?.isHoliday === true;
+};
+
+// Check if a date is an early close day
+const isEarlyClose = (dateStr: string): boolean => {
+    const info = getMarketDayInfo(dateStr);
+    return info?.isEarlyClose === true;
 };
 
 // Get the status of a day for display
-const getDayStatus = (dateStr: string, date: Date, hasData: boolean, isToday: boolean): 'trading' | 'weekend' | 'holiday' | 'pending' => {
+const getDayStatus = (dateStr: string, date: Date, hasData: boolean, isToday: boolean): 'trading' | 'weekend' | 'holiday' | 'early_close' | 'pending' => {
     if (hasData) return 'trading';
     if (isWeekend(date)) return 'weekend';
     if (isMarketHoliday(dateStr)) return 'holiday';
+    if (isEarlyClose(dateStr)) return 'early_close';
     if (isToday) return 'pending';
     return 'pending'; // Trading day without data yet (could be after hours)
 };
@@ -131,11 +261,15 @@ const fillMissingDates = (flows: ETFFlow[]): ETFFlow[] => {
         const isToday = dateStr === todayStr;
         const existingFlow = flowMap.get(dateStr);
 
+        const marketDayInfo = getMarketDayInfo(dateStr);
+
         if (existingFlow) {
-            // Use existing data, mark as trading day
+            // Use existing data, mark as trading day (or early_close if applicable)
             filledFlows.push({
                 ...existingFlow,
-                dayStatus: 'trading'
+                dayStatus: marketDayInfo?.isEarlyClose ? 'early_close' : 'trading',
+                dayName: marketDayInfo?.name,
+                dayNote: marketDayInfo?.note
             });
         } else {
             // Create placeholder for missing date
@@ -147,7 +281,9 @@ const fillMissingDates = (flows: ETFFlow[]): ETFFlow[] => {
                 price_usd: 0,
                 etf_breakdown: [],
                 displayDate: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
-                dayStatus
+                dayStatus,
+                dayName: marketDayInfo?.name,
+                dayNote: marketDayInfo?.note
             });
         }
 
@@ -267,12 +403,15 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
     const cumulativeFlow = data.cumulative_flow || 0;
     const etfBreakdown = data.etf_breakdown || [];
     const dayStatus = data.dayStatus;
+    const dayName = data.dayName;
+    const dayNote = data.dayNote;
 
     // Status message based on day type
     const getStatusMessage = () => {
         switch (dayStatus) {
             case 'weekend': return { text: 'Weekend - Market Closed', color: '#6B7280' };
-            case 'holiday': return { text: 'Holiday - Market Closed', color: '#FBBF24' };
+            case 'holiday': return { text: dayName ? `${dayName} - Market Closed` : 'Holiday - Market Closed', color: '#FBBF24' };
+            case 'early_close': return { text: dayName ? `${dayName} - Early Close (1pm ET)` : 'Early Close (1pm ET)', color: '#F59E0B', showData: true };
             case 'pending': return { text: 'Data Pending', color: '#60A5FA' };
             default: return null;
         }
@@ -290,13 +429,21 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
         }}>
             <div style={{ color: 'white', fontWeight: 600, marginBottom: '8px', borderBottom: '1px solid rgba(75, 85, 99, 0.5)', paddingBottom: '8px' }}>
                 {data.displayDate}
+                {dayName && <div style={{ color: '#9CA3AF', fontSize: '11px', fontWeight: 400, marginTop: '2px' }}>{dayName}</div>}
             </div>
-            {statusMessage ? (
+            {statusMessage && !(statusMessage as { showData?: boolean }).showData ? (
                 <div style={{ color: statusMessage.color, fontSize: '13px', fontWeight: 500 }}>
                     {statusMessage.text}
+                    {dayNote && <div style={{ color: '#6B7280', fontSize: '11px', marginTop: '4px' }}>{dayNote}</div>}
                 </div>
             ) : (
                 <>
+                    {statusMessage && (statusMessage as { showData?: boolean }).showData && (
+                        <div style={{ color: statusMessage.color, fontSize: '12px', fontWeight: 500, marginBottom: '8px' }}>
+                            {statusMessage.text}
+                            {dayNote && <div style={{ color: '#6B7280', fontSize: '10px', marginTop: '2px' }}>{dayNote}</div>}
+                        </div>
+                    )}
                     <div style={{ marginBottom: '8px' }}>
                         <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Net Flow: </span>
                         <span style={{ color: netFlow >= 0 ? '#4ade80' : '#f87171', fontWeight: 600 }}>
@@ -1219,15 +1366,16 @@ https://isoeagle.io`;
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
                                         {displayData.map((entry, index) => {
-                                            const isNonTrading = entry.dayStatus !== 'trading';
+                                            const isNonTrading = entry.dayStatus === 'weekend' || entry.dayStatus === 'holiday' || entry.dayStatus === 'pending';
+                                            const isEarlyClose = entry.dayStatus === 'early_close';
                                             return (
                                                 <Cell
                                                     key={`cell-${index}`}
-                                                    fill={isNonTrading ? '#374151' : (entry.net_flow >= 0 ? 'url(#greenGradient)' : 'url(#redGradient)')}
-                                                    stroke={isNonTrading ? '#4B5563' : (entry.net_flow >= 0 ? '#22C55E' : '#EF4444')}
+                                                    fill={isNonTrading ? '#374151' : isEarlyClose ? '#92400E' : (entry.net_flow >= 0 ? 'url(#greenGradient)' : 'url(#redGradient)')}
+                                                    stroke={isNonTrading ? '#4B5563' : isEarlyClose ? '#F59E0B' : (entry.net_flow >= 0 ? '#22C55E' : '#EF4444')}
                                                     strokeWidth={isNonTrading ? 1 : 2}
                                                     filter={isNonTrading ? undefined : "url(#glow)"}
-                                                    opacity={isNonTrading ? 0.5 : 1}
+                                                    opacity={isNonTrading ? 0.5 : isEarlyClose ? 0.8 : 1}
                                                 />
                                             );
                                         })}
@@ -1335,14 +1483,15 @@ https://isoeagle.io`;
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
                                         {displayData.map((entry, index) => {
-                                            const isNonTrading = entry.dayStatus !== 'trading';
+                                            const isNonTrading = entry.dayStatus === 'weekend' || entry.dayStatus === 'holiday' || entry.dayStatus === 'pending';
+                                            const isEarlyClose = entry.dayStatus === 'early_close';
                                             return (
                                                 <Cell
                                                     key={`cell-${index}`}
-                                                    fill={isNonTrading ? '#374151' : (entry.net_flow >= 0 ? 'url(#composedGreenGradient)' : 'url(#composedRedGradient)')}
-                                                    stroke={isNonTrading ? '#4B5563' : (entry.net_flow >= 0 ? '#22C55E' : '#EF4444')}
+                                                    fill={isNonTrading ? '#374151' : isEarlyClose ? '#92400E' : (entry.net_flow >= 0 ? 'url(#composedGreenGradient)' : 'url(#composedRedGradient)')}
+                                                    stroke={isNonTrading ? '#4B5563' : isEarlyClose ? '#F59E0B' : (entry.net_flow >= 0 ? '#22C55E' : '#EF4444')}
                                                     strokeWidth={isNonTrading ? 1 : 2}
-                                                    opacity={isNonTrading ? 0.5 : 1}
+                                                    opacity={isNonTrading ? 0.5 : isEarlyClose ? 0.8 : 1}
                                                 />
                                             );
                                         })}
@@ -1444,7 +1593,7 @@ https://isoeagle.io`;
                         )}
                     </div>
                     <p className="text-[10px] sm:text-xs text-zinc-400 mt-2">
-                        Gray bars indicate market closed (weekends/holidays). Today's data appears after US market close (~4pm ET).
+                        Gray bars = market closed (weekends/holidays). Orange bars = early close days (1pm ET). Today&apos;s data appears after market close.
                     </p>
                 </div>
             </div>
