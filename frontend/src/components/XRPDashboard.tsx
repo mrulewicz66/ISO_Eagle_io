@@ -1541,10 +1541,13 @@ https://isoeagle.io`;
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
-                            <div className="mt-3 p-2 sm:p-3 bg-zinc-800/50 rounded-lg">
+                            <div className="mt-3 p-2 sm:p-3 bg-zinc-800/50 rounded-lg space-y-1">
                                 <p className="text-[10px] sm:text-xs text-zinc-400">
                                     <span className="text-purple-400 font-medium">Decreasing reserves = bullish</span> (XRP moving to self-custody) |
                                     <span className="text-zinc-400 ml-1">Increasing reserves = bearish</span> (XRP moving to exchanges for potential sale)
+                                </p>
+                                <p className="text-[9px] sm:text-[10px] text-zinc-500 italic">
+                                    This is a generally accepted market indicator, not financial advice. Always do your own research.
                                 </p>
                             </div>
                         </div>
