@@ -914,10 +914,26 @@ export default function XRPDashboard() {
 
     const latestETFBreakdown = latestTradingDayData?.etf_breakdown?.filter(e => e.flow_usd > 0) || [];
 
-    // Filter exchange history by time range
+    // Filter exchange history by time range and ensure it ends with today
     const filteredExchangeHistory = useMemo(() => {
         if (!exchangeHistory?.history) return [];
-        const history = exchangeHistory.history;
+        let history = [...exchangeHistory.history];
+
+        // Add today's data point if not present (using current exchange totals)
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const lastDataDate = history.length > 0 ? history[history.length - 1].date : null;
+
+        if (lastDataDate !== todayStr && exchangeData?.totals?.balance) {
+            history.push({
+                date: todayStr,
+                timestamp: today.getTime(),
+                total: exchangeData.totals.balance,
+                exchanges: {}
+            });
+        }
+
+        // For 'all', return full history from the earliest available date
         if (reserveTimeRange === 'all') return history;
 
         const now = Date.now();
@@ -929,7 +945,7 @@ export default function XRPDashboard() {
             default: return history;
         }
         return history.filter(h => h.timestamp >= cutoff);
-    }, [exchangeHistory, reserveTimeRange]);
+    }, [exchangeHistory, reserveTimeRange, exchangeData?.totals?.balance]);
 
     // Generate Twitter share text
     const generateShareText = () => {
@@ -1620,7 +1636,15 @@ https://isoeagle.io`;
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                                 <div>
                                     <h3 className="text-base sm:text-lg font-bold text-white">Historical Trend</h3>
-                                    <p className="text-zinc-400 text-xs sm:text-sm">Total XRP held on exchanges over time</p>
+                                    <p className="text-zinc-400 text-xs sm:text-sm">
+                                        {filteredExchangeHistory.length > 0 ? (
+                                            <>
+                                                {new Date(filteredExchangeHistory[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                {' → '}
+                                                {new Date(filteredExchangeHistory[filteredExchangeHistory.length - 1].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </>
+                                        ) : 'Total XRP held on exchanges over time'}
+                                    </p>
                                 </div>
                                 <div className="flex bg-zinc-800/80 rounded-lg p-0.5 sm:p-1 border border-zinc-700/50">
                                     {[
