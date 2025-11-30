@@ -12,6 +12,8 @@ const updates: Update[] = [
     {
         date: '2025-01-31',
         changes: [
+            'Added historical exchange reserves chart (18+ months of daily data)',
+            'Added time range selector for exchange history (30D, 90D, 1Y, All)',
             'Added XRP price correlation overlay on ETF flow chart',
             'Added keyboard shortcuts for power users (1-4, D/W/M/Y/A, C, P)',
             'Added CSV data export for ETF flows',

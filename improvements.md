@@ -191,11 +191,11 @@ If you want to cover API costs:
 - [x] Keyboard shortcuts (1-4 chart types, D/W/M/Y/A time ranges, C cumulative, P price)
 - [x] Data export CSV/JSON
 - [x] Bookmarkable chart states (URL params)
+- [x] Historical exchange reserve chart (18+ months of daily data, time range selector)
 
 ### Not Started
 - [ ] Daily email digest
 - [ ] ETF comparison stats (BTC/ETH vs XRP)
-- [ ] Historical exchange reserve chart
 - [ ] Coin selector architecture (for future ISO coins)
 - [ ] PWA support
 - [ ] Light theme toggle
