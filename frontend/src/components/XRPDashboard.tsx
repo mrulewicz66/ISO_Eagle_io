@@ -548,8 +548,8 @@ export default function XRPDashboard() {
     const [showPriceLine, setShowPriceLine] = useState(false);
     const [showBTCComparison, setShowBTCComparison] = useState(false);
     const [showETHComparison, setShowETHComparison] = useState(false);
-    const [btcComparisonData, setBtcComparisonData] = useState<{ day: number; cumulative_flow: number }[] | null>(null);
-    const [ethComparisonData, setEthComparisonData] = useState<{ day: number; cumulative_flow: number }[] | null>(null);
+    const [btcComparisonData, setBtcComparisonData] = useState<{ day: number; net_flow: number; cumulative_flow: number }[] | null>(null);
+    const [ethComparisonData, setEthComparisonData] = useState<{ day: number; net_flow: number; cumulative_flow: number }[] | null>(null);
     const [btcTotalCumulative, setBtcTotalCumulative] = useState<number | null>(null);
     const [ethTotalCumulative, setEthTotalCumulative] = useState<number | null>(null);
     const [copied, setCopied] = useState(false);
