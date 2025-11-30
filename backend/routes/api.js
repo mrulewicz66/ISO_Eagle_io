@@ -309,6 +309,40 @@ router.get('/xrp-exchange-balance-history', async (req, res) => {
     }
 });
 
+// Get BTC ETF flows for comparison (cumulative from day 0)
+router.get('/btc-etf-flows', async (req, res) => {
+    try {
+        const btcFlows = await coinGlass.getBTCETFFlows();
+        if (!btcFlows || btcFlows.length === 0) {
+            return res.status(503).json({ error: 'BTC ETF data unavailable' });
+        }
+
+        // Transform and calculate cumulative flows
+        let cumulative = 0;
+        const flows = btcFlows
+            .sort((a, b) => a.timestamp - b.timestamp)
+            .map((flow, index) => {
+                cumulative += flow.flow_usd || 0;
+                return {
+                    day: index, // Day 0, 1, 2, etc. from ETF launch
+                    date: new Date(flow.timestamp).toISOString().split('T')[0],
+                    timestamp: flow.timestamp,
+                    net_flow: flow.flow_usd || 0,
+                    cumulative_flow: cumulative
+                };
+            });
+
+        res.json({
+            flows,
+            launch_date: flows[0]?.date,
+            total_days: flows.length
+        });
+    } catch (error) {
+        console.error('Error fetching BTC ETF flows:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Debug endpoint to check data sources
 router.get('/debug/etf-sources', async (req, res) => {
     try {

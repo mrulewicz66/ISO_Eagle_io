@@ -12,6 +12,8 @@ const updates: Update[] = [
     {
         date: '2025-01-31',
         changes: [
+            'Added BTC ETF comparison - compare XRP ETF cumulative flows vs BTC ETF from launch day',
+            'Added chart zoom with scroll wheel (zoom in/out) and drag to pan',
             'Added dynamic NYSE holiday calendar with automatic year scaling',
             'Added early close day highlighting (Black Friday, Christmas Eve, July 3rd)',
             'Chart tooltips now show holiday names and trading notes',

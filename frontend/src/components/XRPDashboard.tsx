@@ -388,19 +388,21 @@ const getXAxisInterval = (dataLength: number): number | 'preserveStartEnd' => {
 };
 
 // Custom tooltip component for ETF flow charts
-const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumulative }: {
+const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumulative, showBTCComparison }: {
     active?: boolean;
-    payload?: Array<{ payload: ETFFlow & { displayDate: string } }>;
+    payload?: Array<{ payload: ETFFlow & { displayDate: string; btc_cumulative_flow?: number | null } }>;
     label?: string;
     formatFlow: (num: number) => string;
     etfInfo: { [key: string]: { color: string; institution: string } };
     showCumulative?: boolean;
+    showBTCComparison?: boolean;
 }) => {
     if (!active || !payload || !payload.length) return null;
 
     const data = payload[0].payload;
     const netFlow = data.net_flow;
     const cumulativeFlow = data.cumulative_flow || 0;
+    const btcCumulativeFlow = data.btc_cumulative_flow;
     const etfBreakdown = data.etf_breakdown || [];
     const dayStatus = data.dayStatus;
     const dayName = data.dayName;
@@ -452,9 +454,17 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
                     </div>
                     {showCumulative && (
                         <div style={{ marginBottom: '8px' }}>
-                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Cumulative: </span>
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>XRP Cumulative: </span>
                             <span style={{ color: cumulativeFlow >= 0 ? '#60A5FA' : '#f87171', fontWeight: 600 }}>
                                 {cumulativeFlow >= 0 ? '+' : ''}${formatFlow(cumulativeFlow)}
+                            </span>
+                        </div>
+                    )}
+                    {showBTCComparison && showCumulative && btcCumulativeFlow !== null && btcCumulativeFlow !== undefined && (
+                        <div style={{ marginBottom: '8px' }}>
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>BTC ETF (same day): </span>
+                            <span style={{ color: '#F97316', fontWeight: 600 }}>
+                                {btcCumulativeFlow >= 0 ? '+' : ''}${formatFlow(btcCumulativeFlow)}
                             </span>
                         </div>
                     )}
@@ -512,6 +522,8 @@ export default function XRPDashboard() {
     const [timeRange, setTimeRangeState] = useState<TimeRange>('all');
     const [showCumulative, setShowCumulative] = useState(true);
     const [showPriceLine, setShowPriceLine] = useState(false);
+    const [showBTCComparison, setShowBTCComparison] = useState(false);
+    const [btcComparisonData, setBtcComparisonData] = useState<{ day: number; cumulative_flow: number }[] | null>(null);
     const [copied, setCopied] = useState(false);
     const [exchangeHistory, setExchangeHistory] = useState<ExchangeHistoryData | null>(null);
     const [reserveTimeRange, setReserveTimeRange] = useState<'30d' | '90d' | '1y' | 'all'>('all');
@@ -644,6 +656,25 @@ export default function XRPDashboard() {
         };
         fetchExchangeHistory();
     }, []);
+
+    // Fetch BTC ETF comparison data when toggle is enabled
+    useEffect(() => {
+        if (!showBTCComparison) return;
+        if (btcComparisonData) return; // Already fetched
+
+        const fetchBTCData = async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/btc-etf-flows`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setBtcComparisonData(data.flows || []);
+                }
+            } catch (err) {
+                console.error('Error fetching BTC ETF data:', err);
+            }
+        };
+        fetchBTCData();
+    }, [showBTCComparison, btcComparisonData]);
 
     const fetchData = async () => {
         try {
@@ -859,18 +890,30 @@ export default function XRPDashboard() {
             }
         }
 
+        // Create a map of BTC cumulative flows by day index
+        const btcByDay = new Map<number, number>();
+        if (btcComparisonData) {
+            btcComparisonData.forEach(d => {
+                btcByDay.set(d.day, d.cumulative_flow);
+            });
+        }
+
         // Calculate cumulative flows (only for trading days)
+        // Also map BTC comparison data by day index (day 0 = ETF launch)
         let cumulative = 0;
-        return filteredData.map(flow => {
+        return filteredData.map((flow, index) => {
             if (flow.dayStatus === 'trading') {
                 cumulative += flow.net_flow;
             }
+            // Get BTC cumulative for the same day index from start
+            const btcCumulative = btcByDay.get(index);
             return {
                 ...flow,
-                cumulative_flow: cumulative
+                cumulative_flow: cumulative,
+                btc_cumulative_flow: btcCumulative !== undefined ? btcCumulative : null
             };
         });
-    }, [baseData, timeRange]);
+    }, [baseData, timeRange, btcComparisonData]);
 
     // Reset zoom when timeRange changes
     useEffect(() => {
@@ -1425,6 +1468,19 @@ https://isoeagle.io`;
                             <span className="hidden sm:inline">Price</span>
                             <span className="sm:hidden">$</span>
                         </button>
+                        {/* BTC Comparison Toggle */}
+                        <button
+                            onClick={() => setShowBTCComparison(!showBTCComparison)}
+                            className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all duration-200 border ${
+                                showBTCComparison
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+                                    : 'bg-zinc-800/80 text-zinc-400 border-zinc-700/50 hover:text-white hover:bg-zinc-700/50'
+                            }`}
+                            title="Compare with BTC ETF (same day from launch)"
+                        >
+                            <span className="hidden sm:inline">vs BTC</span>
+                            <span className="sm:hidden">BTC</span>
+                        </button>
                         {/* Export CSV */}
                         <button
                             onClick={handleExportCSV}
@@ -1560,7 +1616,7 @@ https://isoeagle.io`;
                                         <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
                                     )}
                                     <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeDasharray="3 3" />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} showBTCComparison={showBTCComparison} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
                                         {zoomedDisplayData.map((entry, index) => {
                                             const isNonTrading = entry.dayStatus === 'weekend' || entry.dayStatus === 'holiday' || entry.dayStatus === 'pending';
@@ -1598,6 +1654,19 @@ https://isoeagle.io`;
                                             dot={{ fill: '#F59E0B', strokeWidth: 1, r: 2, stroke: '#1F2937' }}
                                             yAxisId="price"
                                             name="XRP Price"
+                                            connectNulls
+                                        />
+                                    )}
+                                    {showBTCComparison && showCumulative && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="btc_cumulative_flow"
+                                            stroke="#F97316"
+                                            strokeWidth={2}
+                                            strokeDasharray="3 3"
+                                            dot={false}
+                                            yAxisId="cumulative"
+                                            name="BTC ETF (Day from Launch)"
                                             connectNulls
                                         />
                                     )}
@@ -1677,7 +1746,7 @@ https://isoeagle.io`;
                                         <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
                                     )}
                                     <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeWidth={2} />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} showBTCComparison={showBTCComparison} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
                                         {zoomedDisplayData.map((entry, index) => {
                                             const isNonTrading = entry.dayStatus === 'weekend' || entry.dayStatus === 'holiday' || entry.dayStatus === 'pending';
@@ -1722,6 +1791,19 @@ https://isoeagle.io`;
                                             dot={{ fill: '#F59E0B', strokeWidth: 1, r: 2, stroke: '#1F2937' }}
                                             yAxisId="price"
                                             name="XRP Price"
+                                            connectNulls
+                                        />
+                                    )}
+                                    {showBTCComparison && showCumulative && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="btc_cumulative_flow"
+                                            stroke="#F97316"
+                                            strokeWidth={2}
+                                            strokeDasharray="3 3"
+                                            dot={false}
+                                            yAxisId="cumulative"
+                                            name="BTC ETF (Day from Launch)"
                                             connectNulls
                                         />
                                     )}
@@ -1785,7 +1867,13 @@ https://isoeagle.io`;
                         {showCumulative && (
                             <div className="flex items-center gap-1.5">
                                 <div className="w-4 h-0.5 bg-blue-400" style={{ borderTop: '2px dashed #60A5FA' }}></div>
-                                <span className="text-blue-400">Cumulative Total</span>
+                                <span className="text-blue-400">XRP Cumulative</span>
+                            </div>
+                        )}
+                        {showBTCComparison && showCumulative && (
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-4 h-0.5" style={{ borderTop: '2px dashed #F97316' }}></div>
+                                <span className="text-orange-400">BTC ETF (from launch)</span>
                             </div>
                         )}
                     </div>
