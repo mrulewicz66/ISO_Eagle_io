@@ -180,8 +180,8 @@ If you want to cover API costs:
 
 ## Implementation Status
 
-- [ ] Cumulative ETF flow line
-- [ ] Twitter share button
+- [x] Cumulative ETF flow line
+- [x] Twitter share button
 - [ ] Price correlation overlay
 - [ ] Daily email digest
 - [ ] ETF comparison stats

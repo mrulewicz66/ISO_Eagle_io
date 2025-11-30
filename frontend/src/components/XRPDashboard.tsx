@@ -347,6 +347,7 @@ export default function XRPDashboard() {
     const [showMockData, setShowMockData] = useState(false);
     const [timeRange, setTimeRange] = useState<TimeRange>('all');
     const [showCumulative, setShowCumulative] = useState(true);
+    const [copied, setCopied] = useState(false);
 
     // Build dynamic ETF info map that includes any new ETFs from API data
     const dynamicETFInfo = useMemo(() => {
@@ -661,6 +662,40 @@ https://isoeagle.io
         window.open(`https://twitter.com/intent/tweet?text=${shareText}`, '_blank', 'width=550,height=420');
     };
 
+    const handleCopyShare = async () => {
+        const latestFlow = displayDailyInflow;
+        const flowDirection = latestFlow >= 0 ? 'inflow' : 'outflow';
+        const flowAmount = formatFlow(Math.abs(latestFlow));
+        const price = priceData?.price_usd.toFixed(4) || 'N/A';
+        const priceChange = priceData?.price_change_24h?.toFixed(2) || '0';
+        const priceEmoji = parseFloat(priceChange) >= 0 ? '📈' : '📉';
+
+        const text = `🚀 XRP ETF Update
+
+💰 Latest: ${latestFlow >= 0 ? '+' : '-'}$${flowAmount} ${flowDirection}
+📊 Net Total: ${netFlow >= 0 ? '+' : ''}$${formatFlow(netFlow)}
+${priceEmoji} Price: $${price} (${parseFloat(priceChange) >= 0 ? '+' : ''}${priceChange}%)
+
+Track XRP institutional flows live 👇
+https://isoeagle.io`;
+
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
     if (loading) {
         return (
             <div className="space-y-6">
@@ -688,17 +723,39 @@ https://isoeagle.io
                             <p className="text-blue-100 text-xs sm:text-base truncate">Real-time institutional flow tracking</p>
                         </div>
                     </div>
-                    {/* Twitter Share Button */}
-                    <button
-                        onClick={handleTwitterShare}
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-black/30 hover:bg-black/50 border border-white/20 hover:border-white/40 rounded-lg sm:rounded-xl transition-all duration-200 group"
-                        title="Share on X/Twitter"
-                    >
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                        </svg>
-                        <span className="text-white text-xs sm:text-sm font-medium hidden sm:inline">Share</span>
-                    </button>
+                    {/* Share Buttons */}
+                    <div className="flex items-center gap-2">
+                        {/* Copy to Clipboard Button */}
+                        <button
+                            onClick={handleCopyShare}
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-black/30 hover:bg-black/50 border border-white/20 hover:border-white/40 rounded-lg sm:rounded-xl transition-all duration-200 group"
+                            title="Copy to clipboard"
+                        >
+                            {copied ? (
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            ) : (
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            )}
+                            <span className="text-white text-xs sm:text-sm font-medium hidden sm:inline">
+                                {copied ? 'Copied!' : 'Copy'}
+                            </span>
+                        </button>
+                        {/* Twitter Share Button */}
+                        <button
+                            onClick={handleTwitterShare}
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-black/30 hover:bg-black/50 border border-white/20 hover:border-white/40 rounded-lg sm:rounded-xl transition-all duration-200 group"
+                            title="Share on X/Twitter"
+                        >
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            <span className="text-white text-xs sm:text-sm font-medium hidden sm:inline">Share</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
