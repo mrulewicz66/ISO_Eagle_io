@@ -1465,74 +1465,12 @@ https://isoeagle.io`;
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-                        <table className="min-w-full divide-y divide-zinc-700">
-                            <thead>
-                                <tr>
-                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-zinc-400 uppercase">Exchange</th>
-                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-400 uppercase">Balance</th>
-                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-400 uppercase hidden sm:table-cell">24h</th>
-                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-400 uppercase">7d</th>
-                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-400 uppercase">30d</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-700">
-                                {exchangeData.exchanges.slice(0, 10).map((ex) => (
-                                    <tr key={ex.exchange} className="hover:bg-zinc-800/50">
-                                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white">
-                                            <div className="flex items-center gap-1.5 sm:gap-2">
-                                                <div className="relative w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0">
-                                                    {/* Fallback always rendered behind */}
-                                                    <div className="absolute inset-0 rounded-full bg-zinc-700 flex items-center justify-center text-[8px] sm:text-xs text-zinc-400">
-                                                        {ex.exchange.charAt(0)}
-                                                    </div>
-                                                    {/* Image overlays fallback when loaded successfully */}
-                                                    {getExchangeLogo(ex.exchange) && (
-                                                        <img
-                                                            src={getExchangeLogo(ex.exchange)!}
-                                                            alt={ex.exchange}
-                                                            className="absolute inset-0 w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                            }}
-                                                        />
-                                                    )}
-                                                </div>
-                                                <span className="truncate">{ex.exchange}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right text-white whitespace-nowrap">{formatXRP(ex.balance)}</td>
-                                        <td className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right font-medium hidden sm:table-cell ${ex.change_1d_pct === 0 ? 'text-zinc-500' : ex.change_1d_pct < 0 ? 'text-green-400' : 'text-red-400'}`} title={ex.change_1d_pct === 0 ? 'CoinGlass does not provide 24h change data for XRP' : undefined}>
-                                            {ex.change_1d_pct === 0 ? 'N/A' : `${ex.change_1d_pct > 0 ? '+' : ''}${ex.change_1d_pct?.toFixed(2)}%`}
-                                        </td>
-                                        <td className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right font-medium whitespace-nowrap ${ex.change_7d_pct <= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {ex.change_7d_pct > 0 ? '+' : ''}{ex.change_7d_pct?.toFixed(2)}%
-                                        </td>
-                                        <td className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right font-medium whitespace-nowrap ${ex.change_30d_pct <= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {ex.change_30d_pct > 0 ? '+' : ''}{ex.change_30d_pct?.toFixed(2)}%
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="mt-3 sm:mt-4 p-2 sm:p-4 bg-zinc-800/50 rounded-lg space-y-1 sm:space-y-2">
-                        <p className="text-[10px] sm:text-xs text-zinc-200">
-                            <span className="text-green-400 font-medium">Green = XRP leaving</span> (bullish) |
-                            <span className="text-red-400 font-medium ml-1">Red = XRP entering</span> (bearish)
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-zinc-300 hidden sm:block">
-                            Note: 24h change shows N/A because CoinGlass does not currently provide intraday data for XRP exchange balances.
-                        </p>
-                    </div>
-
-                    {/* Historical Exchange Reserves Chart */}
+                    {/* Historical Exchange Reserves Chart - FIRST */}
                     {filteredExchangeHistory.length > 0 && (
-                        <div className="mt-6 pt-6 border-t border-zinc-700">
+                        <div className="mb-6">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                                 <div>
-                                    <h3 className="text-base sm:text-lg font-bold text-white">Historical Exchange Reserves</h3>
+                                    <h3 className="text-base sm:text-lg font-bold text-white">Historical Trend</h3>
                                     <p className="text-zinc-400 text-xs sm:text-sm">Total XRP held on exchanges over time</p>
                                 </div>
                                 <div className="flex bg-zinc-800/80 rounded-lg p-0.5 sm:p-1 border border-zinc-700/50">
@@ -1611,6 +1549,69 @@ https://isoeagle.io`;
                             </div>
                         </div>
                     )}
+
+                    {/* Exchange Balance Table */}
+                    <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+                        <table className="min-w-full divide-y divide-zinc-700">
+                            <thead>
+                                <tr>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-zinc-400 uppercase">Exchange</th>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-400 uppercase">Balance</th>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-400 uppercase hidden sm:table-cell">24h</th>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-400 uppercase">7d</th>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-zinc-400 uppercase">30d</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-700">
+                                {exchangeData.exchanges.slice(0, 10).map((ex) => (
+                                    <tr key={ex.exchange} className="hover:bg-zinc-800/50">
+                                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white">
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <div className="relative w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0">
+                                                    {/* Fallback always rendered behind */}
+                                                    <div className="absolute inset-0 rounded-full bg-zinc-700 flex items-center justify-center text-[8px] sm:text-xs text-zinc-400">
+                                                        {ex.exchange.charAt(0)}
+                                                    </div>
+                                                    {/* Image overlays fallback when loaded successfully */}
+                                                    {getExchangeLogo(ex.exchange) && (
+                                                        <img
+                                                            src={getExchangeLogo(ex.exchange)!}
+                                                            alt={ex.exchange}
+                                                            className="absolute inset-0 w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                                <span className="truncate">{ex.exchange}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right text-white whitespace-nowrap">{formatXRP(ex.balance)}</td>
+                                        <td className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right font-medium hidden sm:table-cell ${ex.change_1d_pct === 0 ? 'text-zinc-500' : ex.change_1d_pct < 0 ? 'text-green-400' : 'text-red-400'}`} title={ex.change_1d_pct === 0 ? 'CoinGlass does not provide 24h change data for XRP' : undefined}>
+                                            {ex.change_1d_pct === 0 ? 'N/A' : `${ex.change_1d_pct > 0 ? '+' : ''}${ex.change_1d_pct?.toFixed(2)}%`}
+                                        </td>
+                                        <td className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right font-medium whitespace-nowrap ${ex.change_7d_pct <= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {ex.change_7d_pct > 0 ? '+' : ''}{ex.change_7d_pct?.toFixed(2)}%
+                                        </td>
+                                        <td className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right font-medium whitespace-nowrap ${ex.change_30d_pct <= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {ex.change_30d_pct > 0 ? '+' : ''}{ex.change_30d_pct?.toFixed(2)}%
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="mt-3 sm:mt-4 p-2 sm:p-4 bg-zinc-800/50 rounded-lg space-y-1 sm:space-y-2">
+                        <p className="text-[10px] sm:text-xs text-zinc-200">
+                            <span className="text-green-400 font-medium">Green = XRP leaving</span> (bullish) |
+                            <span className="text-red-400 font-medium ml-1">Red = XRP entering</span> (bearish)
+                        </p>
+                        <p className="text-[10px] sm:text-xs text-zinc-300 hidden sm:block">
+                            Note: 24h change shows N/A because CoinGlass does not currently provide intraday data for XRP exchange balances.
+                        </p>
+                    </div>
                 </div>
             )}
 
