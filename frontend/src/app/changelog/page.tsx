@@ -56,32 +56,42 @@ const updates: Update[] = [
 export default function ChangelogPage() {
     return (
         <div className="min-h-screen bg-zinc-950 text-white">
-            {/* Header with Logo */}
-            <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-3">
-                <div className="max-w-3xl mx-auto">
-                    <Link href="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
+            {/* Header with Logo - matches main dashboard */}
+            <header className="bg-zinc-900 border-b border-zinc-800 px-3 py-3 sm:p-4">
+                <div className="container mx-auto flex items-center gap-2 sm:gap-3">
+                    <Link href="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
                         <div
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                            className="w-10 h-10 sm:w-16 sm:h-16 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
                             style={{ backgroundColor: '#2F2F2F' }}
                         >
                             <img
                                 src="/iso-eagle.png"
                                 alt="ISO Eagle"
-                                className="w-full h-full object-cover"
                                 style={{
                                     transform: 'scale(1.15) translateY(6%)',
                                 }}
                             />
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-white">ISO Eagle</h2>
-                            <p className="text-xs text-zinc-400">Back to Dashboard</p>
+                        <div className="min-w-0">
+                            <h1 className="text-lg sm:text-xl font-bold text-white truncate">ISO Eagle</h1>
+                            <p className="text-xs text-zinc-400 truncate">XRP & ISO 20022 Focus</p>
                         </div>
                     </Link>
                 </div>
             </header>
 
             <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
+                {/* Back Link */}
+                <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-6"
+                >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Dashboard
+                </Link>
+
                 {/* Page Title */}
                 <div className="mb-8">
                     <h1 className="text-3xl sm:text-4xl font-bold mb-2">Changelog</h1>
