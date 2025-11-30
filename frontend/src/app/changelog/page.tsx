@@ -12,6 +12,9 @@ const updates: Update[] = [
     {
         date: '2025-01-31',
         changes: [
+            'Added dynamic NYSE holiday calendar with automatic year scaling',
+            'Added early close day highlighting (Black Friday, Christmas Eve, July 3rd)',
+            'Chart tooltips now show holiday names and trading notes',
             'Added historical exchange reserves chart (18+ months of daily data)',
             'Added time range selector for exchange history (30D, 90D, 1Y, All)',
             'Added XRP price correlation overlay on ETF flow chart',
