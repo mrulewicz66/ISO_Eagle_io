@@ -468,11 +468,11 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
                         <div style={{ marginBottom: '8px' }}>
                             <span style={{ color: '#9CA3AF', fontSize: '12px' }}>BTC ETF (same day): </span>
                             <span style={{ color: btcDailyFlow !== null && btcDailyFlow !== undefined && btcDailyFlow >= 0 ? '#F97316' : '#f87171', fontWeight: 600 }}>
-                                {btcDailyFlow !== null && btcDailyFlow !== undefined ? `${btcDailyFlow >= 0 ? '+' : ''}$$${formatFlow(btcDailyFlow)}` : 'N/A'}
+                                {btcDailyFlow !== null && btcDailyFlow !== undefined ? `${btcDailyFlow >= 0 ? '+' : '-'}$$${formatFlow(btcDailyFlow)}` : 'N/A'}
                             </span>
                             <div style={{ marginLeft: '0px', marginTop: '2px' }}>
-                                <span style={{ color: '#6B7280', fontSize: '11px' }}>Cumulative: </span>
-                                <span style={{ color: btcCumulativeFlow >= 0 ? '#F97316' : '#f87171', fontWeight: 600, fontSize: '11px' }}>
+                                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Cumulative: </span>
+                                <span style={{ color: btcCumulativeFlow >= 0 ? '#F97316' : '#f87171', fontWeight: 600 }}>
                                     {btcCumulativeFlow >= 0 ? '+' : ''}${formatFlow(btcCumulativeFlow)}
                                 </span>
                             </div>
@@ -482,11 +482,11 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
                         <div style={{ marginBottom: '8px' }}>
                             <span style={{ color: '#9CA3AF', fontSize: '12px' }}>ETH ETF (same day): </span>
                             <span style={{ color: ethDailyFlow !== null && ethDailyFlow !== undefined && ethDailyFlow >= 0 ? '#A855F7' : '#f87171', fontWeight: 600 }}>
-                                {ethDailyFlow !== null && ethDailyFlow !== undefined ? `${ethDailyFlow >= 0 ? '+' : ''}$$${formatFlow(ethDailyFlow)}` : 'N/A'}
+                                {ethDailyFlow !== null && ethDailyFlow !== undefined ? `${ethDailyFlow >= 0 ? '+' : '-'}$$${formatFlow(ethDailyFlow)}` : 'N/A'}
                             </span>
                             <div style={{ marginLeft: '0px', marginTop: '2px' }}>
-                                <span style={{ color: '#6B7280', fontSize: '11px' }}>Cumulative: </span>
-                                <span style={{ color: ethCumulativeFlow >= 0 ? '#A855F7' : '#f87171', fontWeight: 600, fontSize: '11px' }}>
+                                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Cumulative: </span>
+                                <span style={{ color: ethCumulativeFlow >= 0 ? '#A855F7' : '#f87171', fontWeight: 600 }}>
                                     {ethCumulativeFlow >= 0 ? '+' : ''}${formatFlow(ethCumulativeFlow)}
                                 </span>
                             </div>
