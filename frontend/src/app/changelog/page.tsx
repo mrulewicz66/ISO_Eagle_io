@@ -154,12 +154,12 @@ export default function ChangelogPage() {
                 <div className="mt-12 pt-8 border-t border-zinc-800 text-center text-zinc-500 text-sm">
                     <p>Have a feature request?</p>
                     <a
-                        href="https://twitter.com/isaboripple"
+                        href="https://x.com/rulewicz66"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-400 hover:text-blue-300 transition-colors"
                     >
-                        Let us know on X/Twitter
+                        Let us know on X
                     </a>
                 </div>
             </div>
