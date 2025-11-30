@@ -3,10 +3,12 @@ const router = express.Router();
 const db = require('../db/database');
 const CoinGlassService = require('../services/coinGlassService');
 const SoSoValueService = require('../services/sosoValueService');
+const CoinGeckoService = require('../services/coinGeckoService');
 
 // Initialize services
 const coinGlass = new CoinGlassService(process.env.COINGLASS_API_KEY);
 const sosoValue = new SoSoValueService(process.env.SOSOVALUE_API_KEY);
+const coinGecko = new CoinGeckoService(process.env.COINGECKO_API_KEY);
 
 // Get latest ETF flows
 router.get('/etf-flows', async (req, res) => {
@@ -243,6 +245,20 @@ router.get('/debug/exchange-raw', async (req, res) => {
             allFields: Object.keys(balances[0] || {})
         });
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get XRP 7-day trading volume (from CoinGecko)
+router.get('/xrp-7d-volume', async (req, res) => {
+    try {
+        const volume7d = await coinGecko.get7dVolume('ripple');
+        if (volume7d === null) {
+            return res.status(503).json({ error: 'Unable to fetch 7d volume data' });
+        }
+        res.json({ volume_7d: volume7d });
+    } catch (error) {
+        console.error('Error fetching XRP 7d volume:', error);
         res.status(500).json({ error: error.message });
     }
 });

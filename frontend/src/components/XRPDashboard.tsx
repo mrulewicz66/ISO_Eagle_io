@@ -25,6 +25,7 @@ interface PriceData {
     volume_24h: number;
     price_change_24h: number;
     price_change_7d: number | null;
+    volume_7d: number | null;
 }
 
 interface ExchangeBalance {
@@ -373,12 +374,20 @@ export default function XRPDashboard() {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-            const [etfRes, pricesRes, exchangeRes] = await Promise.all([
+            const [etfRes, pricesRes, exchangeRes, volume7dRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/api/xrp-etf-flows`, { signal: controller.signal }),
                 fetch(`${API_BASE_URL}/api/prices`, { signal: controller.signal }),
-                fetch(`${API_BASE_URL}/api/xrp-exchange-balances`, { signal: controller.signal })
+                fetch(`${API_BASE_URL}/api/xrp-exchange-balances`, { signal: controller.signal }),
+                fetch(`${API_BASE_URL}/api/xrp-7d-volume`, { signal: controller.signal })
             ]);
             clearTimeout(timeoutId);
+
+            // Parse 7d volume first so we can include it in priceData
+            let volume7d: number | null = null;
+            if (volume7dRes.ok) {
+                const volume7dData = await volume7dRes.json();
+                volume7d = volume7dData.volume_7d || null;
+            }
 
             if (etfRes.ok) {
                 const flows = await etfRes.json();
@@ -430,7 +439,8 @@ export default function XRPDashboard() {
                         market_cap: parseFloat(xrp.market_cap),
                         volume_24h: parseFloat(xrp.volume_24h),
                         price_change_24h: parseFloat(xrp.price_change_24h) || 0,
-                        price_change_7d: xrp.price_change_7d ? parseFloat(xrp.price_change_7d) : null
+                        price_change_7d: xrp.price_change_7d ? parseFloat(xrp.price_change_7d) : null,
+                        volume_7d: volume7d
                     });
                 }
             }
@@ -657,11 +667,19 @@ export default function XRPDashboard() {
                         <div className="text-lg sm:text-2xl font-bold text-white">
                             {priceData ? formatNumber(priceData.market_cap) : '-'}
                         </div>
-                        <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/10">
-                            <div className="text-blue-100 text-[10px] sm:text-xs">24h Volume</div>
-                            <span className="text-xs sm:text-sm font-semibold text-white">
-                                {priceData ? formatNumber(priceData.volume_24h) : '-'}
-                            </span>
+                        <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                            <div className="flex justify-between items-center">
+                                <div className="text-blue-100 text-[10px] sm:text-xs">24h Vol</div>
+                                <span className="text-xs sm:text-sm font-semibold text-white">
+                                    {priceData ? formatNumber(priceData.volume_24h) : '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <div className="text-blue-100 text-[10px] sm:text-xs">7d Vol</div>
+                                <span className="text-xs sm:text-sm font-semibold text-white">
+                                    {priceData && priceData.volume_7d !== null ? formatNumber(priceData.volume_7d) : '-'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div className="bg-green-500/20 backdrop-blur rounded-lg sm:rounded-xl p-3 sm:p-4 border border-green-400/30">

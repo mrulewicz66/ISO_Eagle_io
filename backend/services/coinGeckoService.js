@@ -69,6 +69,29 @@ class CoinGeckoService {
             throw error;
         }
     }
+
+    // Get 7-day historical volume for a coin
+    async get7dVolume(coinId = 'ripple') {
+        try {
+            const response = await axios.get(`${this.baseURL}/coins/${coinId}/market_chart`, {
+                params: {
+                    vs_currency: 'usd',
+                    days: 7,
+                    interval: 'daily'
+                },
+                headers: this.headers
+            });
+
+            // total_volumes is an array of [timestamp, volume]
+            const volumes = response.data.total_volumes || [];
+            // Sum all daily volumes
+            const totalVolume = volumes.reduce((sum, [, vol]) => sum + vol, 0);
+            return totalVolume;
+        } catch (error) {
+            console.error('CoinGecko 7d Volume Error:', error.message);
+            return null;
+        }
+    }
 }
 
 module.exports = CoinGeckoService;
