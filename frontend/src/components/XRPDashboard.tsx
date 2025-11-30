@@ -16,6 +16,7 @@ interface ETFFlow {
         flow_usd: number;
     }[];
     displayDate?: string;
+    dayStatus?: 'trading' | 'weekend' | 'holiday' | 'pending';
 }
 
 interface PriceData {
@@ -47,6 +48,95 @@ interface ExchangeData {
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// US market holidays for 2025 (NYSE/NASDAQ closed)
+const US_MARKET_HOLIDAYS_2025 = [
+    '2025-01-01', // New Year's Day
+    '2025-01-20', // MLK Day
+    '2025-02-17', // Presidents Day
+    '2025-04-18', // Good Friday
+    '2025-05-26', // Memorial Day
+    '2025-06-19', // Juneteenth
+    '2025-07-04', // Independence Day
+    '2025-09-01', // Labor Day
+    '2025-11-27', // Thanksgiving
+    '2025-12-25', // Christmas
+];
+
+// Check if a date is a weekend (Sat=6, Sun=0)
+const isWeekend = (date: Date): boolean => {
+    const day = date.getUTCDay();
+    return day === 0 || day === 6;
+};
+
+// Check if a date is a US market holiday
+const isMarketHoliday = (dateStr: string): boolean => {
+    return US_MARKET_HOLIDAYS_2025.includes(dateStr);
+};
+
+// Get the status of a day for display
+const getDayStatus = (dateStr: string, date: Date, hasData: boolean, isToday: boolean): 'trading' | 'weekend' | 'holiday' | 'pending' => {
+    if (hasData) return 'trading';
+    if (isWeekend(date)) return 'weekend';
+    if (isMarketHoliday(dateStr)) return 'holiday';
+    if (isToday) return 'pending';
+    return 'pending'; // Trading day without data yet (could be after hours)
+};
+
+// Fill in missing dates from first data point to today
+const fillMissingDates = (flows: ETFFlow[]): ETFFlow[] => {
+    if (flows.length === 0) return [];
+
+    // Create a map of existing data by date
+    const flowMap = new Map<string, ETFFlow>();
+    flows.forEach(f => flowMap.set(f.date, f));
+
+    // Get today's date in UTC
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    // Start from the first data point
+    const startDate = new Date(flows[0].timestamp);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    // End at today
+    const endDate = new Date(todayStr);
+    endDate.setUTCHours(0, 0, 0, 0);
+
+    const filledFlows: ETFFlow[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const isToday = dateStr === todayStr;
+        const existingFlow = flowMap.get(dateStr);
+
+        if (existingFlow) {
+            // Use existing data, mark as trading day
+            filledFlows.push({
+                ...existingFlow,
+                dayStatus: 'trading'
+            });
+        } else {
+            // Create placeholder for missing date
+            const dayStatus = getDayStatus(dateStr, currentDate, false, isToday);
+            filledFlows.push({
+                date: dateStr,
+                timestamp: currentDate.getTime(),
+                net_flow: 0,
+                price_usd: 0,
+                etf_breakdown: [],
+                displayDate: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+                dayStatus
+            });
+        }
+
+        // Move to next day
+        currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+    }
+
+    return filledFlows;
+};
 
 // Known ETFs with their colors and institutions
 const KNOWN_ETF_INFO: { [key: string]: { color: string; institution: string } } = {
@@ -154,6 +244,18 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo }: {
     const data = payload[0].payload;
     const netFlow = data.net_flow;
     const etfBreakdown = data.etf_breakdown || [];
+    const dayStatus = data.dayStatus;
+
+    // Status message based on day type
+    const getStatusMessage = () => {
+        switch (dayStatus) {
+            case 'weekend': return { text: 'Weekend - Market Closed', color: '#6B7280' };
+            case 'holiday': return { text: 'Holiday - Market Closed', color: '#FBBF24' };
+            case 'pending': return { text: 'Data Pending', color: '#60A5FA' };
+            default: return null;
+        }
+    };
+    const statusMessage = getStatusMessage();
 
     return (
         <div style={{
@@ -167,42 +269,50 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo }: {
             <div style={{ color: 'white', fontWeight: 600, marginBottom: '8px', borderBottom: '1px solid rgba(75, 85, 99, 0.5)', paddingBottom: '8px' }}>
                 {data.displayDate}
             </div>
-            <div style={{ marginBottom: '8px' }}>
-                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Net Flow: </span>
-                <span style={{ color: netFlow >= 0 ? '#4ade80' : '#f87171', fontWeight: 600 }}>
-                    {netFlow >= 0 ? '+' : ''}${formatFlow(netFlow)}
-                </span>
-            </div>
-            {data.price_usd && (
-                <div style={{ marginBottom: '8px' }}>
-                    <span style={{ color: '#9CA3AF', fontSize: '12px' }}>XRP Price: </span>
-                    <span style={{ color: 'white' }}>${data.price_usd.toFixed(4)}</span>
+            {statusMessage ? (
+                <div style={{ color: statusMessage.color, fontSize: '13px', fontWeight: 500 }}>
+                    {statusMessage.text}
                 </div>
-            )}
-            {etfBreakdown.length > 0 && (
-                <div style={{ borderTop: '1px solid rgba(75, 85, 99, 0.5)', paddingTop: '8px', marginTop: '4px' }}>
-                    <div style={{ color: '#9CA3AF', fontSize: '11px', marginBottom: '6px' }}>ETF Breakdown:</div>
-                    {etfBreakdown.filter(etf => etf.flow_usd !== 0).map((etf, idx) => (
-                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <div style={{
-                                    width: '8px',
-                                    height: '8px',
-                                    borderRadius: '50%',
-                                    backgroundColor: etfInfo[etf.ticker]?.color || '#6B7280'
-                                }} />
-                                <span style={{ color: 'white', fontSize: '12px' }}>{etf.ticker}</span>
-                                <span style={{ color: '#6B7280', fontSize: '10px' }}>{etfInfo[etf.ticker]?.institution}</span>
-                            </div>
-                            <span style={{ color: etf.flow_usd >= 0 ? '#4ade80' : '#f87171', fontSize: '12px', fontWeight: 500 }}>
-                                {etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}
-                            </span>
+            ) : (
+                <>
+                    <div style={{ marginBottom: '8px' }}>
+                        <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Net Flow: </span>
+                        <span style={{ color: netFlow >= 0 ? '#4ade80' : '#f87171', fontWeight: 600 }}>
+                            {netFlow >= 0 ? '+' : ''}${formatFlow(netFlow)}
+                        </span>
+                    </div>
+                    {data.price_usd && data.price_usd > 0 && (
+                        <div style={{ marginBottom: '8px' }}>
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>XRP Price: </span>
+                            <span style={{ color: 'white' }}>${data.price_usd.toFixed(4)}</span>
                         </div>
-                    ))}
-                    {etfBreakdown.filter(etf => etf.flow_usd !== 0).length === 0 && (
-                        <div style={{ color: '#6B7280', fontSize: '11px' }}>No breakdown available</div>
                     )}
-                </div>
+                    {etfBreakdown.length > 0 && (
+                        <div style={{ borderTop: '1px solid rgba(75, 85, 99, 0.5)', paddingTop: '8px', marginTop: '4px' }}>
+                            <div style={{ color: '#9CA3AF', fontSize: '11px', marginBottom: '6px' }}>ETF Breakdown:</div>
+                            {etfBreakdown.filter(etf => etf.flow_usd !== 0).map((etf, idx) => (
+                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <div style={{
+                                            width: '8px',
+                                            height: '8px',
+                                            borderRadius: '50%',
+                                            backgroundColor: etfInfo[etf.ticker]?.color || '#6B7280'
+                                        }} />
+                                        <span style={{ color: 'white', fontSize: '12px' }}>{etf.ticker}</span>
+                                        <span style={{ color: '#6B7280', fontSize: '10px' }}>{etfInfo[etf.ticker]?.institution}</span>
+                                    </div>
+                                    <span style={{ color: etf.flow_usd >= 0 ? '#4ade80' : '#f87171', fontSize: '12px', fontWeight: 500 }}>
+                                        {etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}
+                                    </span>
+                                </div>
+                            ))}
+                            {etfBreakdown.filter(etf => etf.flow_usd !== 0).length === 0 && (
+                                <div style={{ color: '#6B7280', fontSize: '11px' }}>No breakdown available</div>
+                            )}
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
@@ -277,17 +387,23 @@ export default function XRPDashboard() {
                         ...f,
                         displayDate: new Date(f.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
                     }));
-                    setEtfFlows(formatted);
 
-                    const inflow = sorted.filter(f => f.net_flow > 0).reduce((sum, f) => sum + f.net_flow, 0);
-                    const outflow = Math.abs(sorted.filter(f => f.net_flow < 0).reduce((sum, f) => sum + f.net_flow, 0));
-                    const avgDailyInflow = sorted.length > 0 ? inflow / sorted.length : 0;
-                    // Get latest day's flow (last entry in sorted array)
-                    const latestDayFlow = sorted.length > 0 ? sorted[sorted.length - 1].net_flow : 0;
+                    // Fill in missing dates (weekends, holidays) and extend to today
+                    const filledData = fillMissingDates(formatted);
+                    setEtfFlows(filledData);
+
+                    // Calculate stats from actual trading data only
+                    const tradingDays = filledData.filter(f => f.dayStatus === 'trading');
+                    const inflow = tradingDays.filter(f => f.net_flow > 0).reduce((sum, f) => sum + f.net_flow, 0);
+                    const outflow = Math.abs(tradingDays.filter(f => f.net_flow < 0).reduce((sum, f) => sum + f.net_flow, 0));
+                    const avgDailyInflow = tradingDays.length > 0 ? inflow / tradingDays.length : 0;
+                    // Get latest trading day's flow (last entry with actual data)
+                    const latestTradingDay = tradingDays.length > 0 ? tradingDays[tradingDays.length - 1] : null;
+                    const latestDayFlow = latestTradingDay?.net_flow || 0;
                     setTotalInflow(inflow);
                     setTotalOutflow(outflow);
                     setAvgDailyInflow(avgDailyInflow);
-                    setDaysTracked(sorted.length);
+                    setDaysTracked(tradingDays.length);
                     setDailyInflow(latestDayFlow);
                 }
             }
@@ -457,10 +573,13 @@ export default function XRPDashboard() {
 
     const netFlow = displayTotalInflow - displayTotalOutflow;
 
-    // Get latest ETF breakdown for pie chart
-    const latestETFBreakdown = etfFlows.length > 0
-        ? etfFlows[etfFlows.length - 1].etf_breakdown.filter(e => e.flow_usd > 0)
-        : [];
+    // Get latest ETF breakdown from most recent trading day (not weekend/holiday)
+    const latestTradingDayData = useMemo(() => {
+        const tradingDays = etfFlows.filter(f => f.dayStatus === 'trading');
+        return tradingDays.length > 0 ? tradingDays[tradingDays.length - 1] : null;
+    }, [etfFlows]);
+
+    const latestETFBreakdown = latestTradingDayData?.etf_breakdown?.filter(e => e.flow_usd > 0) || [];
 
     if (loading) {
         return (
@@ -735,15 +854,19 @@ export default function XRPDashboard() {
                                     <ReferenceLine y={0} stroke="#6B7280" strokeDasharray="3 3" />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]}>
-                                        {displayData.map((entry, index) => (
-                                            <Cell
-                                                key={`cell-${index}`}
-                                                fill={entry.net_flow >= 0 ? 'url(#greenGradient)' : 'url(#redGradient)'}
-                                                stroke={entry.net_flow >= 0 ? '#22C55E' : '#EF4444'}
-                                                strokeWidth={2}
-                                                filter="url(#glow)"
-                                            />
-                                        ))}
+                                        {displayData.map((entry, index) => {
+                                            const isNonTrading = entry.dayStatus !== 'trading';
+                                            return (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={isNonTrading ? '#374151' : (entry.net_flow >= 0 ? 'url(#greenGradient)' : 'url(#redGradient)')}
+                                                    stroke={isNonTrading ? '#4B5563' : (entry.net_flow >= 0 ? '#22C55E' : '#EF4444')}
+                                                    strokeWidth={isNonTrading ? 1 : 2}
+                                                    filter={isNonTrading ? undefined : "url(#glow)"}
+                                                    opacity={isNonTrading ? 0.5 : 1}
+                                                />
+                                            );
+                                        })}
                                     </Bar>
                                 </BarChart>
                             ) : chartType === 'area' ? (
@@ -814,14 +937,18 @@ export default function XRPDashboard() {
                                     <ReferenceLine y={0} stroke="#6B7280" strokeWidth={2} />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]}>
-                                        {displayData.map((entry, index) => (
-                                            <Cell
-                                                key={`cell-${index}`}
-                                                fill={entry.net_flow >= 0 ? 'url(#composedGreenGradient)' : 'url(#composedRedGradient)'}
-                                                stroke={entry.net_flow >= 0 ? '#22C55E' : '#EF4444'}
-                                                strokeWidth={2}
-                                            />
-                                        ))}
+                                        {displayData.map((entry, index) => {
+                                            const isNonTrading = entry.dayStatus !== 'trading';
+                                            return (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={isNonTrading ? '#374151' : (entry.net_flow >= 0 ? 'url(#composedGreenGradient)' : 'url(#composedRedGradient)')}
+                                                    stroke={isNonTrading ? '#4B5563' : (entry.net_flow >= 0 ? '#22C55E' : '#EF4444')}
+                                                    strokeWidth={isNonTrading ? 1 : 2}
+                                                    opacity={isNonTrading ? 0.5 : 1}
+                                                />
+                                            );
+                                        })}
                                     </Bar>
                                     <Line
                                         type="monotone"
@@ -874,8 +1001,22 @@ export default function XRPDashboard() {
 
                 {/* ETF Market Hours Note */}
                 <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
-                    <p className="text-[10px] sm:text-xs text-zinc-300">
-                        ETF data is available for trading days only (Mon-Fri). Weekend gaps are normal. Today's data appears after US market close (~4pm ET).
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] sm:text-xs">
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-green-500 to-green-600"></div>
+                            <span className="text-zinc-300">Inflow</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-red-500 to-red-600"></div>
+                            <span className="text-zinc-300">Outflow</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-sm bg-zinc-600 opacity-50"></div>
+                            <span className="text-zinc-400">Weekend/Holiday</span>
+                        </div>
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-zinc-400 mt-2">
+                        Gray bars indicate market closed (weekends/holidays). Today's data appears after US market close (~4pm ET).
                     </p>
                 </div>
             </div>
