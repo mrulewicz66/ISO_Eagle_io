@@ -56,7 +56,7 @@ class CoinGlassService {
     async getBTCETFFlows() {
         try {
             const response = await axios.get(
-                `${this.baseURL}/etf/btc/flows-history`,
+                `${this.baseURL}/etf/bitcoin/flow-history`,
                 { headers: this.headers }
             );
             return response.data.data || [];
