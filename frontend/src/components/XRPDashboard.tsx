@@ -473,7 +473,7 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
                             <div style={{ marginLeft: '0px', marginTop: '2px' }}>
                                 <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Cumulative: </span>
                                 <span style={{ color: btcCumulativeFlow >= 0 ? '#F97316' : '#f87171', fontWeight: 600 }}>
-                                    {btcCumulativeFlow >= 0 ? '+' : ''}${formatFlow(btcCumulativeFlow)}
+                                    {btcCumulativeFlow >= 0 ? '+' : '-'}${formatFlow(Math.abs(btcCumulativeFlow))}
                                 </span>
                             </div>
                         </div>
@@ -487,7 +487,7 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumula
                             <div style={{ marginLeft: '0px', marginTop: '2px' }}>
                                 <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Cumulative: </span>
                                 <span style={{ color: ethCumulativeFlow >= 0 ? '#A855F7' : '#f87171', fontWeight: 600 }}>
-                                    {ethCumulativeFlow >= 0 ? '+' : ''}${formatFlow(ethCumulativeFlow)}
+                                    {ethCumulativeFlow >= 0 ? '+' : '-'}${formatFlow(Math.abs(ethCumulativeFlow))}
                                 </span>
                             </div>
                         </div>
