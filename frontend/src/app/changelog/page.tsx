@@ -56,18 +56,34 @@ const updates: Update[] = [
 export default function ChangelogPage() {
     return (
         <div className="min-h-screen bg-zinc-950 text-white">
-            <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
-                {/* Header */}
-                <div className="mb-8">
-                    <Link
-                        href="/"
-                        className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-6"
-                    >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Dashboard
+            {/* Header with Logo */}
+            <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-3">
+                <div className="max-w-3xl mx-auto">
+                    <Link href="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <div
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                            style={{ backgroundColor: '#2F2F2F' }}
+                        >
+                            <img
+                                src="/iso-eagle.png"
+                                alt="ISO Eagle"
+                                className="w-full h-full object-cover"
+                                style={{
+                                    transform: 'scale(1.15) translateY(6%)',
+                                }}
+                            />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-white">ISO Eagle</h2>
+                            <p className="text-xs text-zinc-400">Back to Dashboard</p>
+                        </div>
                     </Link>
+                </div>
+            </header>
+
+            <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
+                {/* Page Title */}
+                <div className="mb-8">
                     <h1 className="text-3xl sm:text-4xl font-bold mb-2">Changelog</h1>
                     <p className="text-zinc-400">Track all updates and improvements to ISO Eagle</p>
                 </div>
