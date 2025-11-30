@@ -367,7 +367,7 @@ export default function XRPDashboard() {
     const [showPriceLine, setShowPriceLine] = useState(false);
     const [copied, setCopied] = useState(false);
     const [exchangeHistory, setExchangeHistory] = useState<ExchangeHistoryData | null>(null);
-    const [reserveTimeRange, setReserveTimeRange] = useState<'30d' | '90d' | '1y' | 'all'>('90d');
+    const [reserveTimeRange, setReserveTimeRange] = useState<'30d' | '90d' | '1y' | 'all'>('all');
 
     // URL param helpers - update URL when chart state changes
     const updateURL = useCallback((chart: ChartType, range: TimeRange) => {
