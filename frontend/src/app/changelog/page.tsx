@@ -10,6 +10,13 @@ interface Update {
 
 const updates: Update[] = [
     {
+        date: '2025-02-01',
+        changes: [
+            'Added ETH ETF comparison - compare XRP ETF cumulative flows vs ETH ETF from launch day (purple line)',
+            'Added cumulative totals display showing BTC/ETH flows at same number of trading days',
+        ]
+    },
+    {
         date: '2025-01-31',
         changes: [
             'Added BTC ETF comparison - compare XRP ETF cumulative flows vs BTC ETF from launch day',

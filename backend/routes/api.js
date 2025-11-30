@@ -335,10 +335,46 @@ router.get('/btc-etf-flows', async (req, res) => {
         res.json({
             flows,
             launch_date: flows[0]?.date,
-            total_days: flows.length
+            total_days: flows.length,
+            total_cumulative: cumulative
         });
     } catch (error) {
         console.error('Error fetching BTC ETF flows:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get ETH ETF flows for comparison (cumulative from day 0)
+router.get('/eth-etf-flows', async (req, res) => {
+    try {
+        const ethFlows = await coinGlass.getETHETFFlows();
+        if (!ethFlows || ethFlows.length === 0) {
+            return res.status(503).json({ error: 'ETH ETF data unavailable' });
+        }
+
+        // Transform and calculate cumulative flows
+        let cumulative = 0;
+        const flows = ethFlows
+            .sort((a, b) => a.timestamp - b.timestamp)
+            .map((flow, index) => {
+                cumulative += flow.flow_usd || 0;
+                return {
+                    day: index, // Day 0, 1, 2, etc. from ETF launch
+                    date: new Date(flow.timestamp).toISOString().split('T')[0],
+                    timestamp: flow.timestamp,
+                    net_flow: flow.flow_usd || 0,
+                    cumulative_flow: cumulative
+                };
+            });
+
+        res.json({
+            flows,
+            launch_date: flows[0]?.date,
+            total_days: flows.length,
+            total_cumulative: cumulative
+        });
+    } catch (error) {
+        console.error('Error fetching ETH ETF flows:', error);
         res.status(500).json({ error: error.message });
     }
 });

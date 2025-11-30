@@ -69,7 +69,7 @@ class CoinGlassService {
     async getETHETFFlows() {
         try {
             const response = await axios.get(
-                `${this.baseURL}/etf/eth/flows-history`,
+                `${this.baseURL}/etf/ethereum/flow-history`,
                 { headers: this.headers }
             );
             return response.data.data || [];
