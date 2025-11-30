@@ -946,22 +946,31 @@ export default function XRPDashboard() {
         setZoomEnd(null);
     }, []);
 
+    // Refs to hold current values for wheel handler (avoids stale closures)
+    const zoomStateRef = useRef({ zoomStart, zoomEnd, dataLength: displayData.length });
+    useEffect(() => {
+        zoomStateRef.current = { zoomStart, zoomEnd, dataLength: displayData.length };
+    }, [zoomStart, zoomEnd, displayData.length]);
+
     // Native wheel event handler for zoom (passive: false to allow preventDefault)
+    // Re-runs when timeRange or chartType changes to attach to new container
     useEffect(() => {
         const container = chartContainerRef.current;
         if (!container) return;
 
         const handleWheel = (e: WheelEvent) => {
-            if (displayData.length < 7) return;
+            const { zoomStart: currentZoomStart, zoomEnd: currentZoomEnd, dataLength } = zoomStateRef.current;
+
+            if (dataLength < 7) return;
 
             e.preventDefault();
             e.stopPropagation();
 
             const MIN_VISIBLE = 7;
-            const ZOOM_SPEED = 0.1;
+            const ZOOM_SPEED = 0.15;
 
-            const currentStart = zoomStart ?? 0;
-            const currentEnd = zoomEnd ?? displayData.length - 1;
+            const currentStart = currentZoomStart ?? 0;
+            const currentEnd = currentZoomEnd ?? dataLength - 1;
             const visibleCount = currentEnd - currentStart + 1;
 
             const rect = container.getBoundingClientRect();
@@ -979,10 +988,10 @@ export default function XRPDashboard() {
                 const newEnd = Math.max(currentEnd - rightZoom, currentStart + MIN_VISIBLE - 1);
 
                 setZoomStart(Math.max(0, newStart));
-                setZoomEnd(Math.min(displayData.length - 1, newEnd));
+                setZoomEnd(Math.min(dataLength - 1, newEnd));
             } else {
                 // Zoom out
-                if (visibleCount >= displayData.length) {
+                if (visibleCount >= dataLength) {
                     setZoomStart(null);
                     setZoomEnd(null);
                     return;
@@ -995,19 +1004,19 @@ export default function XRPDashboard() {
                 const newStart = currentStart - leftZoom;
                 const newEnd = currentEnd + rightZoom;
 
-                if (newStart <= 0 && newEnd >= displayData.length - 1) {
+                if (newStart <= 0 && newEnd >= dataLength - 1) {
                     setZoomStart(null);
                     setZoomEnd(null);
                 } else {
                     setZoomStart(Math.max(0, newStart));
-                    setZoomEnd(Math.min(displayData.length - 1, newEnd));
+                    setZoomEnd(Math.min(dataLength - 1, newEnd));
                 }
             }
         };
 
         container.addEventListener('wheel', handleWheel, { passive: false });
         return () => container.removeEventListener('wheel', handleWheel);
-    }, [displayData.length, zoomStart, zoomEnd]);
+    }, [timeRange, chartType, displayData.length > 0]); // Re-attach when chart visibility changes
 
     // CSV Export function
     const handleExportCSV = useCallback(() => {
