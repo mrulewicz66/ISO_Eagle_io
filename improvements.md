@@ -180,13 +180,22 @@ If you want to cover API costs:
 
 ## Implementation Status
 
-- [x] Cumulative ETF flow line
-- [x] Twitter share button
+### Completed
+- [x] Cumulative ETF flow line (with toggle)
+- [x] Twitter/X share button
+- [x] Copy-to-clipboard share button (for mobile)
+- [x] 7-day trading volume in Market Cap section
+- [x] Changelog page (/changelog)
+- [x] Redesigned social preview images (OG + Twitter cards)
+
+### Not Started
 - [ ] Price correlation overlay
 - [ ] Daily email digest
-- [ ] ETF comparison stats
+- [ ] ETF comparison stats (BTC/ETH vs XRP)
 - [ ] Historical exchange reserve chart
 - [ ] Keyboard shortcuts
-- [ ] Data export CSV
-- [ ] Coin selector architecture
+- [ ] Data export CSV/JSON
+- [ ] Coin selector architecture (for future ISO coins)
 - [ ] PWA support
+- [ ] Light theme toggle
+- [ ] Bookmarkable chart states (URL params)
