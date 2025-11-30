@@ -263,6 +263,52 @@ router.get('/xrp-7d-volume', async (req, res) => {
     }
 });
 
+// Get XRP exchange balance history for charts
+router.get('/xrp-exchange-balance-history', async (req, res) => {
+    try {
+        const chartData = await coinGlass.getExchangeBalanceChart('XRP');
+        if (!chartData || !chartData.time_list || !chartData.data_map) {
+            return res.status(503).json({ error: 'Historical exchange data unavailable' });
+        }
+
+        // Transform into chart-friendly format
+        // Each point: { date, timestamp, total, exchanges: { Binance: x, OKX: y, ... } }
+        const timeList = chartData.time_list;
+        const dataMap = chartData.data_map;
+        const exchanges = Object.keys(dataMap);
+
+        const history = timeList.map((timestamp, i) => {
+            const point = {
+                date: new Date(timestamp).toISOString().split('T')[0],
+                timestamp,
+                total: 0,
+                exchanges: {}
+            };
+
+            for (const exchange of exchanges) {
+                const balance = dataMap[exchange][i] || 0;
+                point.exchanges[exchange] = balance;
+                point.total += balance;
+            }
+
+            return point;
+        });
+
+        res.json({
+            history,
+            exchanges,
+            dateRange: {
+                start: history[0]?.date,
+                end: history[history.length - 1]?.date,
+                points: history.length
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching XRP exchange balance history:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Debug endpoint to check data sources
 router.get('/debug/etf-sources', async (req, res) => {
     try {

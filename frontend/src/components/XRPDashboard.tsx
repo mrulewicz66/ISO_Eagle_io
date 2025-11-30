@@ -50,6 +50,23 @@ interface ExchangeData {
     };
 }
 
+interface ExchangeHistoryPoint {
+    date: string;
+    timestamp: number;
+    total: number;
+    exchanges: { [key: string]: number };
+}
+
+interface ExchangeHistoryData {
+    history: ExchangeHistoryPoint[];
+    exchanges: string[];
+    dateRange: {
+        start: string;
+        end: string;
+        points: number;
+    };
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // US market holidays for 2025 (NYSE/NASDAQ closed)
@@ -349,6 +366,8 @@ export default function XRPDashboard() {
     const [showCumulative, setShowCumulative] = useState(true);
     const [showPriceLine, setShowPriceLine] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [exchangeHistory, setExchangeHistory] = useState<ExchangeHistoryData | null>(null);
+    const [reserveTimeRange, setReserveTimeRange] = useState<'30d' | '90d' | '1y' | 'all'>('90d');
 
     // URL param helpers - update URL when chart state changes
     const updateURL = useCallback((chart: ChartType, range: TimeRange) => {
@@ -450,6 +469,22 @@ export default function XRPDashboard() {
         fetchData();
         const interval = setInterval(fetchData, 60000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Fetch exchange history (separate, less frequent)
+    useEffect(() => {
+        const fetchExchangeHistory = async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/xrp-exchange-balance-history`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setExchangeHistory(data);
+                }
+            } catch (err) {
+                console.error('Error fetching exchange history:', err);
+            }
+        };
+        fetchExchangeHistory();
     }, []);
 
     const fetchData = async () => {
@@ -731,6 +766,23 @@ export default function XRPDashboard() {
     }, [etfFlows]);
 
     const latestETFBreakdown = latestTradingDayData?.etf_breakdown?.filter(e => e.flow_usd > 0) || [];
+
+    // Filter exchange history by time range
+    const filteredExchangeHistory = useMemo(() => {
+        if (!exchangeHistory?.history) return [];
+        const history = exchangeHistory.history;
+        if (reserveTimeRange === 'all') return history;
+
+        const now = Date.now();
+        let cutoff: number;
+        switch (reserveTimeRange) {
+            case '30d': cutoff = now - 30 * 24 * 60 * 60 * 1000; break;
+            case '90d': cutoff = now - 90 * 24 * 60 * 60 * 1000; break;
+            case '1y': cutoff = now - 365 * 24 * 60 * 60 * 1000; break;
+            default: return history;
+        }
+        return history.filter(h => h.timestamp >= cutoff);
+    }, [exchangeHistory, reserveTimeRange]);
 
     // Generate Twitter share text
     const generateShareText = () => {
@@ -1474,6 +1526,91 @@ https://isoeagle.io`;
                             Note: 24h change shows N/A because CoinGlass does not currently provide intraday data for XRP exchange balances.
                         </p>
                     </div>
+
+                    {/* Historical Exchange Reserves Chart */}
+                    {filteredExchangeHistory.length > 0 && (
+                        <div className="mt-6 pt-6 border-t border-zinc-700">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                                <div>
+                                    <h3 className="text-base sm:text-lg font-bold text-white">Historical Exchange Reserves</h3>
+                                    <p className="text-zinc-400 text-xs sm:text-sm">Total XRP held on exchanges over time</p>
+                                </div>
+                                <div className="flex bg-zinc-800/80 rounded-lg p-0.5 sm:p-1 border border-zinc-700/50">
+                                    {[
+                                        { range: '30d' as const, label: '30D' },
+                                        { range: '90d' as const, label: '90D' },
+                                        { range: '1y' as const, label: '1Y' },
+                                        { range: 'all' as const, label: 'All' },
+                                    ].map(({ range, label }) => (
+                                        <button
+                                            key={range}
+                                            onClick={() => setReserveTimeRange(range)}
+                                            className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-xs font-medium transition-all duration-200 ${
+                                                reserveTimeRange === range
+                                                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                                                    : 'text-zinc-400 hover:text-white hover:bg-zinc-700/50'
+                                            }`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="h-[280px] sm:h-[350px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={filteredExchangeHistory} margin={{ top: 10, right: 10, left: 0, bottom: 30 }}>
+                                        <defs>
+                                            <linearGradient id="reserveGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.6} />
+                                                <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.05} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
+                                        <XAxis
+                                            dataKey="date"
+                                            stroke="#9CA3AF"
+                                            tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                                            tickFormatter={(v) => {
+                                                const d = new Date(v);
+                                                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                            }}
+                                            interval={Math.floor(filteredExchangeHistory.length / 8)}
+                                        />
+                                        <YAxis
+                                            stroke="#9CA3AF"
+                                            tickFormatter={(v) => `${(v / 1e9).toFixed(1)}B`}
+                                            tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                                            width={50}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                                                border: '1px solid rgba(75, 85, 99, 0.5)',
+                                                borderRadius: '12px',
+                                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                                            }}
+                                            labelFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                            formatter={(value: number) => [`${formatXRP(value)} XRP`, 'Total Reserves']}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="total"
+                                            stroke="#8B5CF6"
+                                            strokeWidth={2}
+                                            fill="url(#reserveGradient)"
+                                            dot={false}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="mt-3 p-2 sm:p-3 bg-zinc-800/50 rounded-lg">
+                                <p className="text-[10px] sm:text-xs text-zinc-400">
+                                    <span className="text-purple-400 font-medium">Decreasing reserves = bullish</span> (XRP moving to self-custody) |
+                                    <span className="text-zinc-400 ml-1">Increasing reserves = bearish</span> (XRP moving to exchanges for potential sale)
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
