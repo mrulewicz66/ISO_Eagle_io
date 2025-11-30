@@ -17,6 +17,7 @@ interface ETFFlow {
     }[];
     displayDate?: string;
     dayStatus?: 'trading' | 'weekend' | 'holiday' | 'pending';
+    cumulative_flow?: number;
 }
 
 interface PriceData {
@@ -234,17 +235,19 @@ const getXAxisInterval = (dataLength: number): number | 'preserveStartEnd' => {
 };
 
 // Custom tooltip component for ETF flow charts
-const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo }: {
+const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo, showCumulative }: {
     active?: boolean;
     payload?: Array<{ payload: ETFFlow & { displayDate: string } }>;
     label?: string;
     formatFlow: (num: number) => string;
     etfInfo: { [key: string]: { color: string; institution: string } };
+    showCumulative?: boolean;
 }) => {
     if (!active || !payload || !payload.length) return null;
 
     const data = payload[0].payload;
     const netFlow = data.net_flow;
+    const cumulativeFlow = data.cumulative_flow || 0;
     const etfBreakdown = data.etf_breakdown || [];
     const dayStatus = data.dayStatus;
 
@@ -283,6 +286,14 @@ const CustomTooltip = ({ active, payload, label, formatFlow, etfInfo }: {
                             {netFlow >= 0 ? '+' : ''}${formatFlow(netFlow)}
                         </span>
                     </div>
+                    {showCumulative && (
+                        <div style={{ marginBottom: '8px' }}>
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>Cumulative: </span>
+                            <span style={{ color: cumulativeFlow >= 0 ? '#60A5FA' : '#f87171', fontWeight: 600 }}>
+                                {cumulativeFlow >= 0 ? '+' : ''}${formatFlow(cumulativeFlow)}
+                            </span>
+                        </div>
+                    )}
                     {data.price_usd && data.price_usd > 0 && (
                         <div style={{ marginBottom: '8px' }}>
                             <span style={{ color: '#9CA3AF', fontSize: '12px' }}>XRP Price: </span>
@@ -335,6 +346,7 @@ export default function XRPDashboard() {
     const [chartType, setChartType] = useState<ChartType>('composed');
     const [showMockData, setShowMockData] = useState(false);
     const [timeRange, setTimeRange] = useState<TimeRange>('all');
+    const [showCumulative, setShowCumulative] = useState(true);
 
     // Build dynamic ETF info map that includes any new ETFs from API data
     const dynamicETFInfo = useMemo(() => {
@@ -550,34 +562,50 @@ export default function XRPDashboard() {
     // Use mock or real data based on toggle
     const baseData = showMockData ? mockData : etfFlows;
 
-    // Filter data based on time range
+    // Filter data based on time range and calculate cumulative flows
     const displayData = useMemo(() => {
-        if (timeRange === 'all' || baseData.length === 0) return baseData;
+        let filteredData = baseData;
 
-        // Use the latest date in the data as reference (not current date)
-        // This makes filters work correctly with both real and mock data
-        const latestTimestamp = Math.max(...baseData.map(f => f.timestamp));
-        const latestDate = new Date(latestTimestamp);
-        let cutoffDate: Date;
+        if (timeRange !== 'all' && baseData.length > 0) {
+            // Use the latest date in the data as reference (not current date)
+            // This makes filters work correctly with both real and mock data
+            const latestTimestamp = Math.max(...baseData.map(f => f.timestamp));
+            const latestDate = new Date(latestTimestamp);
+            let cutoffDate: Date;
 
-        switch (timeRange) {
-            case 'daily':
-                cutoffDate = new Date(latestDate.getTime() - 24 * 60 * 60 * 1000);
-                break;
-            case 'weekly':
-                cutoffDate = new Date(latestDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-                break;
-            case 'monthly':
-                cutoffDate = new Date(latestDate.getTime() - 30 * 24 * 60 * 60 * 1000);
-                break;
-            case 'yearly':
-                cutoffDate = new Date(latestDate.getTime() - 365 * 24 * 60 * 60 * 1000);
-                break;
-            default:
-                return baseData;
+            switch (timeRange) {
+                case 'daily':
+                    cutoffDate = new Date(latestDate.getTime() - 24 * 60 * 60 * 1000);
+                    break;
+                case 'weekly':
+                    cutoffDate = new Date(latestDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    break;
+                case 'monthly':
+                    cutoffDate = new Date(latestDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    break;
+                case 'yearly':
+                    cutoffDate = new Date(latestDate.getTime() - 365 * 24 * 60 * 60 * 1000);
+                    break;
+                default:
+                    break;
+            }
+
+            if (cutoffDate!) {
+                filteredData = baseData.filter(flow => new Date(flow.timestamp) >= cutoffDate);
+            }
         }
 
-        return baseData.filter(flow => new Date(flow.timestamp) >= cutoffDate);
+        // Calculate cumulative flows (only for trading days)
+        let cumulative = 0;
+        return filteredData.map(flow => {
+            if (flow.dayStatus === 'trading') {
+                cumulative += flow.net_flow;
+            }
+            return {
+                ...flow,
+                cumulative_flow: cumulative
+            };
+        });
     }, [baseData, timeRange]);
 
     // Calculate totals from display data
@@ -605,6 +633,34 @@ export default function XRPDashboard() {
 
     const latestETFBreakdown = latestTradingDayData?.etf_breakdown?.filter(e => e.flow_usd > 0) || [];
 
+    // Generate Twitter share text
+    const generateShareText = () => {
+        const latestFlow = displayDailyInflow;
+        const flowDirection = latestFlow >= 0 ? 'inflow' : 'outflow';
+        const flowAmount = formatFlow(Math.abs(latestFlow));
+        const price = priceData?.price_usd.toFixed(4) || 'N/A';
+        const priceChange = priceData?.price_change_24h?.toFixed(2) || '0';
+        const priceEmoji = parseFloat(priceChange) >= 0 ? '📈' : '📉';
+
+        const text = `🚀 #XRP ETF Update
+
+💰 Latest: ${latestFlow >= 0 ? '+' : '-'}$${flowAmount} ${flowDirection}
+📊 Net Total: ${netFlow >= 0 ? '+' : ''}$${formatFlow(netFlow)}
+${priceEmoji} Price: $${price} (${parseFloat(priceChange) >= 0 ? '+' : ''}${priceChange}%)
+
+Track XRP institutional flows live 👇
+https://isoeagle.io
+
+#XRPETF #Crypto #Ripple`;
+
+        return encodeURIComponent(text);
+    };
+
+    const handleTwitterShare = () => {
+        const shareText = generateShareText();
+        window.open(`https://twitter.com/intent/tweet?text=${shareText}`, '_blank', 'width=550,height=420');
+    };
+
     if (loading) {
         return (
             <div className="space-y-6">
@@ -618,18 +674,31 @@ export default function XRPDashboard() {
         <div className="space-y-6">
             {/* XRP Hero Section */}
             <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 p-4 sm:p-8 rounded-xl sm:rounded-2xl shadow-2xl">
-                <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0">
-                        <img
-                            src="/xrplogo.png"
-                            alt="XRP"
-                            className="w-full h-full object-cover"
-                        />
+                <div className="flex items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0">
+                            <img
+                                src="/xrplogo.png"
+                                alt="XRP"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="min-w-0">
+                            <h1 className="text-xl sm:text-3xl font-bold text-white">XRP ETF Monitor</h1>
+                            <p className="text-blue-100 text-xs sm:text-base truncate">Real-time institutional flow tracking</p>
+                        </div>
                     </div>
-                    <div className="min-w-0">
-                        <h1 className="text-xl sm:text-3xl font-bold text-white">XRP ETF Monitor</h1>
-                        <p className="text-blue-100 text-xs sm:text-base truncate">Real-time institutional flow tracking</p>
-                    </div>
+                    {/* Twitter Share Button */}
+                    <button
+                        onClick={handleTwitterShare}
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-black/30 hover:bg-black/50 border border-white/20 hover:border-white/40 rounded-lg sm:rounded-xl transition-all duration-200 group"
+                        title="Share on X/Twitter"
+                    >
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        <span className="text-white text-xs sm:text-sm font-medium hidden sm:inline">Share</span>
+                    </button>
                 </div>
 
                 {/* Stats Cards */}
@@ -801,6 +870,19 @@ export default function XRPDashboard() {
                                 </button>
                             ))}
                         </div>
+                        {/* Cumulative Toggle */}
+                        <button
+                            onClick={() => setShowCumulative(!showCumulative)}
+                            className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all duration-200 border ${
+                                showCumulative
+                                    ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+                                    : 'bg-zinc-800/80 text-zinc-400 border-zinc-700/50 hover:text-white hover:bg-zinc-700/50'
+                            }`}
+                            title="Toggle cumulative total line"
+                        >
+                            <span className="hidden sm:inline">Cumulative</span>
+                            <span className="sm:hidden">&Sigma;</span>
+                        </button>
                     </div>
                 </div>
 
@@ -874,7 +956,7 @@ export default function XRPDashboard() {
                         <div className="h-[320px] sm:h-[450px]">
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
-                                <BarChart data={displayData} margin={{ top: 10, right: 10, left: 40, bottom: 30 }}>
+                                <ComposedChart data={displayData} margin={{ top: 10, right: showCumulative ? 60 : 10, left: 40, bottom: 30 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
@@ -894,10 +976,13 @@ export default function XRPDashboard() {
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(displayData.length)} height={50} />
-                                    <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
-                                    <ReferenceLine y={0} stroke="#6B7280" strokeDasharray="3 3" />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
-                                    <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]}>
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
+                                    {showCumulative && (
+                                        <YAxis yAxisId="right" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 10, fill: '#60A5FA' }} />
+                                    )}
+                                    <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeDasharray="3 3" />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
+                                    <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
                                         {displayData.map((entry, index) => {
                                             const isNonTrading = entry.dayStatus !== 'trading';
                                             return (
@@ -912,7 +997,19 @@ export default function XRPDashboard() {
                                             );
                                         })}
                                     </Bar>
-                                </BarChart>
+                                    {showCumulative && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="cumulative_flow"
+                                            stroke="#60A5FA"
+                                            strokeWidth={3}
+                                            strokeDasharray="5 5"
+                                            dot={false}
+                                            yAxisId="right"
+                                            name="Cumulative"
+                                        />
+                                    )}
+                                </ComposedChart>
                             ) : chartType === 'area' ? (
                                 <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 40, bottom: 30 }}>
                                     <defs>
@@ -964,7 +1061,7 @@ export default function XRPDashboard() {
                                     />
                                 </LineChart>
                             ) : chartType === 'composed' ? (
-                                <ComposedChart data={displayData} margin={{ top: 10, right: 10, left: 40, bottom: 30 }}>
+                                <ComposedChart data={displayData} margin={{ top: 10, right: showCumulative ? 60 : 10, left: 40, bottom: 30 }}>
                                     <defs>
                                         <linearGradient id="composedGreenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={0.8} />
@@ -977,10 +1074,13 @@ export default function XRPDashboard() {
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
-                                    <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
-                                    <ReferenceLine y={0} stroke="#6B7280" strokeWidth={2} />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
-                                    <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]}>
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+                                    {showCumulative && (
+                                        <YAxis yAxisId="right" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 10, fill: '#60A5FA' }} />
+                                    )}
+                                    <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeWidth={2} />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
+                                    <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
                                         {displayData.map((entry, index) => {
                                             const isNonTrading = entry.dayStatus !== 'trading';
                                             return (
@@ -1000,7 +1100,20 @@ export default function XRPDashboard() {
                                         stroke="#FBBF24"
                                         strokeWidth={3}
                                         dot={{ fill: '#FBBF24', strokeWidth: 2, r: 4, stroke: '#1F2937' }}
+                                        yAxisId="left"
                                     />
+                                    {showCumulative && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="cumulative_flow"
+                                            stroke="#60A5FA"
+                                            strokeWidth={3}
+                                            strokeDasharray="5 5"
+                                            dot={false}
+                                            yAxisId="right"
+                                            name="Cumulative"
+                                        />
+                                    )}
                                 </ComposedChart>
                             ) : null}
                         </ResponsiveContainer>
@@ -1058,6 +1171,12 @@ export default function XRPDashboard() {
                             <div className="w-2.5 h-2.5 rounded-sm bg-zinc-600 opacity-50"></div>
                             <span className="text-zinc-400">Weekend/Holiday</span>
                         </div>
+                        {showCumulative && (
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-4 h-0.5 bg-blue-400" style={{ borderTop: '2px dashed #60A5FA' }}></div>
+                                <span className="text-blue-400">Cumulative Total</span>
+                            </div>
+                        )}
                     </div>
                     <p className="text-[10px] sm:text-xs text-zinc-400 mt-2">
                         Gray bars indicate market closed (weekends/holidays). Today's data appears after US market close (~4pm ET).
