@@ -1685,7 +1685,20 @@ https://isoeagle.io`;
                                                 const d = new Date(v);
                                                 return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                                             }}
-                                            interval={Math.floor(filteredExchangeHistory.length / 8)}
+                                            ticks={(() => {
+                                                // Always include first and last dates, with evenly spaced dates in between
+                                                const dates = filteredExchangeHistory.map(h => h.date);
+                                                if (dates.length <= 8) return dates;
+                                                const numTicks = 6; // Number of intermediate ticks
+                                                const result = [dates[0]]; // Start with first date
+                                                const step = Math.floor((dates.length - 2) / numTicks);
+                                                for (let i = 1; i <= numTicks; i++) {
+                                                    const idx = Math.min(i * step, dates.length - 2);
+                                                    if (!result.includes(dates[idx])) result.push(dates[idx]);
+                                                }
+                                                result.push(dates[dates.length - 1]); // Always end with last date (today)
+                                                return result;
+                                            })()}
                                         />
                                         <YAxis
                                             stroke="#9CA3AF"
