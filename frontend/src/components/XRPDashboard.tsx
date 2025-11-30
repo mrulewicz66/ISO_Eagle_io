@@ -891,62 +891,6 @@ export default function XRPDashboard() {
         return Math.round((visibleCount / displayData.length) * 100);
     }, [isZoomed, zoomStart, zoomEnd, displayData.length]);
 
-    // Handle wheel zoom
-    const handleChartWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-        if (displayData.length < 7) return; // Need at least 7 data points for zoom
-
-        e.preventDefault();
-        const MIN_VISIBLE = 7; // Minimum visible data points
-        const ZOOM_SPEED = 0.1;
-
-        const currentStart = zoomStart ?? 0;
-        const currentEnd = zoomEnd ?? displayData.length - 1;
-        const visibleCount = currentEnd - currentStart + 1;
-
-        // Calculate zoom center based on mouse position
-        const rect = chartContainerRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const mouseXRatio = (e.clientX - rect.left) / rect.width;
-
-        if (e.deltaY < 0) {
-            // Scroll up = zoom in
-            const zoomAmount = Math.max(1, Math.floor(visibleCount * ZOOM_SPEED));
-            if (visibleCount <= MIN_VISIBLE) return;
-
-            const leftZoom = Math.floor(zoomAmount * mouseXRatio);
-            const rightZoom = zoomAmount - leftZoom;
-
-            const newStart = Math.min(currentStart + leftZoom, currentEnd - MIN_VISIBLE + 1);
-            const newEnd = Math.max(currentEnd - rightZoom, currentStart + MIN_VISIBLE - 1);
-
-            setZoomStart(Math.max(0, newStart));
-            setZoomEnd(Math.min(displayData.length - 1, newEnd));
-        } else {
-            // Scroll down = zoom out
-            if (visibleCount >= displayData.length) {
-                // Already at full view, reset
-                setZoomStart(null);
-                setZoomEnd(null);
-                return;
-            }
-
-            const zoomAmount = Math.max(1, Math.floor(visibleCount * ZOOM_SPEED));
-            const leftZoom = Math.floor(zoomAmount * mouseXRatio);
-            const rightZoom = zoomAmount - leftZoom;
-
-            const newStart = currentStart - leftZoom;
-            const newEnd = currentEnd + rightZoom;
-
-            if (newStart <= 0 && newEnd >= displayData.length - 1) {
-                setZoomStart(null);
-                setZoomEnd(null);
-            } else {
-                setZoomStart(Math.max(0, newStart));
-                setZoomEnd(Math.min(displayData.length - 1, newEnd));
-            }
-        }
-    }, [displayData.length, zoomStart, zoomEnd]);
-
     // Handle pan (drag)
     const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (!isZoomed) return;
@@ -1001,6 +945,69 @@ export default function XRPDashboard() {
         setZoomStart(null);
         setZoomEnd(null);
     }, []);
+
+    // Native wheel event handler for zoom (passive: false to allow preventDefault)
+    useEffect(() => {
+        const container = chartContainerRef.current;
+        if (!container) return;
+
+        const handleWheel = (e: WheelEvent) => {
+            if (displayData.length < 7) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const MIN_VISIBLE = 7;
+            const ZOOM_SPEED = 0.1;
+
+            const currentStart = zoomStart ?? 0;
+            const currentEnd = zoomEnd ?? displayData.length - 1;
+            const visibleCount = currentEnd - currentStart + 1;
+
+            const rect = container.getBoundingClientRect();
+            const mouseXRatio = (e.clientX - rect.left) / rect.width;
+
+            if (e.deltaY < 0) {
+                // Zoom in
+                const zoomAmount = Math.max(1, Math.floor(visibleCount * ZOOM_SPEED));
+                if (visibleCount <= MIN_VISIBLE) return;
+
+                const leftZoom = Math.floor(zoomAmount * mouseXRatio);
+                const rightZoom = zoomAmount - leftZoom;
+
+                const newStart = Math.min(currentStart + leftZoom, currentEnd - MIN_VISIBLE + 1);
+                const newEnd = Math.max(currentEnd - rightZoom, currentStart + MIN_VISIBLE - 1);
+
+                setZoomStart(Math.max(0, newStart));
+                setZoomEnd(Math.min(displayData.length - 1, newEnd));
+            } else {
+                // Zoom out
+                if (visibleCount >= displayData.length) {
+                    setZoomStart(null);
+                    setZoomEnd(null);
+                    return;
+                }
+
+                const zoomAmount = Math.max(1, Math.floor(visibleCount * ZOOM_SPEED));
+                const leftZoom = Math.floor(zoomAmount * mouseXRatio);
+                const rightZoom = zoomAmount - leftZoom;
+
+                const newStart = currentStart - leftZoom;
+                const newEnd = currentEnd + rightZoom;
+
+                if (newStart <= 0 && newEnd >= displayData.length - 1) {
+                    setZoomStart(null);
+                    setZoomEnd(null);
+                } else {
+                    setZoomStart(Math.max(0, newStart));
+                    setZoomEnd(Math.min(displayData.length - 1, newEnd));
+                }
+            }
+        };
+
+        container.addEventListener('wheel', handleWheel, { passive: false });
+        return () => container.removeEventListener('wheel', handleWheel);
+    }, [displayData.length, zoomStart, zoomEnd]);
 
     // CSV Export function
     const handleExportCSV = useCallback(() => {
@@ -1489,7 +1496,6 @@ https://isoeagle.io`;
                         <div
                             ref={chartContainerRef}
                             className={`h-[320px] sm:h-[450px] relative ${isZoomed ? 'cursor-grab' : ''} ${isDragging ? 'cursor-grabbing' : ''}`}
-                            onWheel={handleChartWheel}
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUp}
