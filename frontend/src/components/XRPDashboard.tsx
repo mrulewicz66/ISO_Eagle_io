@@ -347,7 +347,7 @@ export default function XRPDashboard() {
     const [showMockData, setShowMockData] = useState(false);
     const [timeRange, setTimeRangeState] = useState<TimeRange>('all');
     const [showCumulative, setShowCumulative] = useState(true);
-    const [showPriceLine, setShowPriceLine] = useState(true);
+    const [showPriceLine, setShowPriceLine] = useState(false);
     const [copied, setCopied] = useState(false);
 
     // URL param helpers - update URL when chart state changes

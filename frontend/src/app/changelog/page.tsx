@@ -83,7 +83,7 @@ export default function ChangelogPage() {
                         </div>
                         <div className="min-w-0">
                             <h1 className="text-lg sm:text-xl font-bold text-white truncate">ISO Eagle</h1>
-                            <p className="text-xs text-zinc-400 truncate">XRP & ISO 20022 Focus</p>
+                            <p className="text-xs text-zinc-400 truncate">XRP & ISO 20022 Institutional Tracking</p>
                         </div>
                     </Link>
                 </div>

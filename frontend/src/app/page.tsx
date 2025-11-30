@@ -26,7 +26,7 @@ export default function Home() {
                         </div>
                         <div className="min-w-0">
                             <h1 className="text-lg sm:text-xl font-bold text-white truncate">ISO Eagle</h1>
-                            <p className="text-xs text-zinc-400 truncate">XRP & ISO 20022 Focus</p>
+                            <p className="text-xs text-zinc-400 truncate">XRP & ISO 20022 Institutional Tracking</p>
                         </div>
                     </div>
                     <ConnectionStatus />
@@ -37,13 +37,6 @@ export default function Home() {
 
                 {/* ========== PRIMARY SECTION: XRP ========== */}
                 <section>
-                    <div className="flex items-center gap-2 mb-4">
-                        <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                            PRIMARY FOCUS
-                        </span>
-                        <span className="text-zinc-400 text-sm">XRP Institutional Tracking</span>
-                    </div>
-
                     {/* XRP ETF Dashboard with Stats + Exchange Reserves */}
                     <XRPDashboard />
                 </section>
