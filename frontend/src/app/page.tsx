@@ -67,7 +67,7 @@ export default function Home() {
                             <div className="flex-1">
                                 <h3 className="text-base sm:text-lg font-bold text-amber-200">Support This Dashboard</h3>
                                 <p className="text-amber-100/70 text-xs sm:text-sm mt-1">
-                                    This dashboard relies on premium API subscriptions. These services cost $50-200+/month to maintain.
+                                    This dashboard relies on premium API subscriptions to provide real-time data.
                                 </p>
                                 <p className="text-amber-100/50 text-[10px] sm:text-xs mt-1 sm:mt-2 hidden sm:block">
                                     Your support helps cover API costs and enables new features like historical charts, alerts, and additional token tracking.
