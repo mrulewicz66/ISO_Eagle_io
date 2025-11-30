@@ -134,11 +134,11 @@ class DataAggregator {
         for (const crypto of cryptoData) {
             try {
                 await db.query(`
-                    INSERT INTO price_data (timestamp, crypto_symbol, price_usd, market_cap, volume_24h, price_change_24h)
-                    VALUES (NOW(), $1, $2, $3, $4, $5)
+                    INSERT INTO price_data (timestamp, crypto_symbol, price_usd, market_cap, volume_24h, price_change_24h, price_change_7d)
+                    VALUES (NOW(), $1, $2, $3, $4, $5, $6)
                     ON CONFLICT (timestamp, crypto_symbol) DO UPDATE
-                    SET price_usd = $2, market_cap = $3, volume_24h = $4, price_change_24h = $5
-                `, [crypto.symbol.toUpperCase(), crypto.current_price, crypto.market_cap, crypto.total_volume, crypto.price_change_percentage_24h]);
+                    SET price_usd = $2, market_cap = $3, volume_24h = $4, price_change_24h = $5, price_change_7d = $6
+                `, [crypto.symbol.toUpperCase(), crypto.current_price, crypto.market_cap, crypto.total_volume, crypto.price_change_percentage_24h, crypto.price_change_percentage_7d_in_currency || null]);
             } catch (err) {
                 console.error(`Error storing price data for ${crypto.symbol}:`, err.code || err.message || err);
             }

@@ -67,7 +67,7 @@ router.get('/prices', async (req, res) => {
     try {
         const query = `
             SELECT DISTINCT ON (crypto_symbol)
-                crypto_symbol, price_usd, market_cap, volume_24h, price_change_24h, timestamp
+                crypto_symbol, price_usd, market_cap, volume_24h, price_change_24h, price_change_7d, timestamp
             FROM price_data
             ORDER BY crypto_symbol, timestamp DESC
         `;

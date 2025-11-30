@@ -24,6 +24,7 @@ interface PriceData {
     market_cap: number;
     volume_24h: number;
     price_change_24h: number;
+    price_change_7d: number | null;
 }
 
 interface ExchangeBalance {
@@ -327,6 +328,8 @@ export default function XRPDashboard() {
     const [avgDailyInflow, setAvgDailyInflow] = useState(0);
     const [daysTracked, setDaysTracked] = useState(0);
     const [dailyInflow, setDailyInflow] = useState(0);
+    const [inflow7d, setInflow7d] = useState(0);
+    const [outflow7d, setOutflow7d] = useState(0);
     const [loading, setLoading] = useState(true);
     const [chartType, setChartType] = useState<ChartType>('composed');
     const [showMockData, setShowMockData] = useState(false);
@@ -400,11 +403,21 @@ export default function XRPDashboard() {
                     // Get latest trading day's flow (last entry with actual data)
                     const latestTradingDay = tradingDays.length > 0 ? tradingDays[tradingDays.length - 1] : null;
                     const latestDayFlow = latestTradingDay?.net_flow || 0;
+
+                    // Calculate 7d flows (last 7 trading days)
+                    const now = Date.now();
+                    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+                    const last7dTradingDays = tradingDays.filter(f => f.timestamp >= sevenDaysAgo);
+                    const inflow7dCalc = last7dTradingDays.filter(f => f.net_flow > 0).reduce((sum, f) => sum + f.net_flow, 0);
+                    const outflow7dCalc = Math.abs(last7dTradingDays.filter(f => f.net_flow < 0).reduce((sum, f) => sum + f.net_flow, 0));
+
                     setTotalInflow(inflow);
                     setTotalOutflow(outflow);
                     setAvgDailyInflow(avgDailyInflow);
                     setDaysTracked(tradingDays.length);
                     setDailyInflow(latestDayFlow);
+                    setInflow7d(inflow7dCalc);
+                    setOutflow7d(outflow7dCalc);
                 }
             }
 
@@ -416,7 +429,8 @@ export default function XRPDashboard() {
                         price_usd: parseFloat(xrp.price_usd),
                         market_cap: parseFloat(xrp.market_cap),
                         volume_24h: parseFloat(xrp.volume_24h),
-                        price_change_24h: parseFloat(xrp.price_change_24h) || 0
+                        price_change_24h: parseFloat(xrp.price_change_24h) || 0,
+                        price_change_7d: xrp.price_change_7d ? parseFloat(xrp.price_change_7d) : null
                     });
                 }
             }
@@ -615,15 +629,27 @@ export default function XRPDashboard() {
                         <div className="text-lg sm:text-2xl font-bold text-white">
                             ${priceData?.price_usd.toFixed(4) || '-'}
                         </div>
-                        <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/10">
-                            <div className="text-blue-100 text-[10px] sm:text-xs">24h Change</div>
-                            {priceData && priceData.price_change_24h !== 0 ? (
-                                <span className={`text-xs sm:text-sm font-bold ${priceData.price_change_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    {priceData.price_change_24h >= 0 ? '+' : ''}{priceData.price_change_24h.toFixed(2)}%
-                                </span>
-                            ) : (
-                                <span className="text-xs sm:text-sm text-zinc-400">-</span>
-                            )}
+                        <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                            <div className="flex justify-between items-center">
+                                <div className="text-blue-100 text-[10px] sm:text-xs">24h</div>
+                                {priceData && priceData.price_change_24h !== 0 ? (
+                                    <span className={`text-xs sm:text-sm font-bold ${priceData.price_change_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {priceData.price_change_24h >= 0 ? '+' : ''}{priceData.price_change_24h.toFixed(2)}%
+                                    </span>
+                                ) : (
+                                    <span className="text-xs sm:text-sm text-zinc-400">-</span>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <div className="text-blue-100 text-[10px] sm:text-xs">7d</div>
+                                {priceData && priceData.price_change_7d !== null ? (
+                                    <span className={`text-xs sm:text-sm font-bold ${priceData.price_change_7d >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {priceData.price_change_7d >= 0 ? '+' : ''}{priceData.price_change_7d.toFixed(2)}%
+                                    </span>
+                                ) : (
+                                    <span className="text-xs sm:text-sm text-zinc-400">-</span>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-lg sm:rounded-xl p-3 sm:p-4">
@@ -643,17 +669,17 @@ export default function XRPDashboard() {
                         <div className="text-lg sm:text-2xl font-bold text-green-400">
                             +${formatFlow(displayTotalInflow)}
                         </div>
-                        <div className="flex justify-between items-center mt-2 pt-2 border-t border-green-500/20">
-                            <div>
-                                <div className="text-green-200 text-[10px] sm:text-xs">Daily (24h)</div>
+                        <div className="mt-2 pt-2 border-t border-green-500/20 space-y-1">
+                            <div className="flex justify-between items-center">
+                                <div className="text-green-200 text-[10px] sm:text-xs">24h</div>
                                 <div className={`text-xs sm:text-sm font-bold ${displayDailyInflow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    {displayDailyInflow >= 0 ? '+' : ''}${formatFlow(displayDailyInflow)}
+                                    {displayDailyInflow >= 0 ? '+' : ''}${formatFlow(Math.max(0, displayDailyInflow))}
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <div className="text-green-200 text-[10px] sm:text-xs">Avg/day</div>
-                                <div className="text-xs sm:text-sm font-semibold text-white">
-                                    ${formatFlow(displayAvgDaily)}
+                            <div className="flex justify-between items-center">
+                                <div className="text-green-200 text-[10px] sm:text-xs">7d</div>
+                                <div className="text-xs sm:text-sm font-bold text-green-400">
+                                    +${formatFlow(inflow7d)}
                                 </div>
                             </div>
                         </div>
@@ -663,17 +689,17 @@ export default function XRPDashboard() {
                         <div className="text-lg sm:text-2xl font-bold text-red-400">
                             -${formatFlow(displayTotalOutflow)}
                         </div>
-                        <div className="flex justify-between items-center mt-2 pt-2 border-t border-red-500/20">
-                            <div>
-                                <div className="text-red-200 text-[10px] sm:text-xs">Daily (24h)</div>
+                        <div className="mt-2 pt-2 border-t border-red-500/20 space-y-1">
+                            <div className="flex justify-between items-center">
+                                <div className="text-red-200 text-[10px] sm:text-xs">24h</div>
                                 <div className={`text-xs sm:text-sm font-bold ${displayDailyInflow < 0 ? 'text-red-400' : 'text-zinc-400'}`}>
                                     {displayDailyInflow < 0 ? `-$${formatFlow(Math.abs(displayDailyInflow))}` : '$0'}
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <div className="text-red-200 text-[10px] sm:text-xs">Avg/day</div>
-                                <div className="text-xs sm:text-sm font-semibold text-white">
-                                    ${formatFlow(displayDaysTracked > 0 ? displayTotalOutflow / displayDaysTracked : 0)}
+                            <div className="flex justify-between items-center">
+                                <div className="text-red-200 text-[10px] sm:text-xs">7d</div>
+                                <div className="text-xs sm:text-sm font-bold text-red-400">
+                                    -${formatFlow(outflow7d)}
                                 </div>
                             </div>
                         </div>

@@ -21,7 +21,8 @@ class CoinGeckoService {
                     vs_currency: 'usd',
                     ids: cryptoIds.join(','),
                     order: 'market_cap_desc',
-                    sparkline: false
+                    sparkline: false,
+                    price_change_percentage: '7d'
                 },
                 headers: this.headers
             });
@@ -44,7 +45,8 @@ class CoinGeckoService {
                 params: {
                     vs_currency: 'usd',
                     ids: iso20022Ids.join(','),
-                    sparkline: false
+                    sparkline: false,
+                    price_change_percentage: '7d'
                 },
                 headers: this.headers
             });
