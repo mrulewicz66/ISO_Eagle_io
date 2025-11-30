@@ -522,7 +522,10 @@ export default function XRPDashboard() {
     const [isDragging, setIsDragging] = useState(false);
     const [dragStartX, setDragStartX] = useState(0);
     const [dragStartZoom, setDragStartZoom] = useState<{ start: number; end: number } | null>(null);
-    const chartContainerRef = useRef<HTMLDivElement>(null);
+    const [chartContainer, setChartContainer] = useState<HTMLDivElement | null>(null);
+    const chartContainerRef = useCallback((node: HTMLDivElement | null) => {
+        setChartContainer(node);
+    }, []);
 
     // URL param helpers - update URL when chart state changes
     const updateURL = useCallback((chart: ChartType, range: TimeRange) => {
@@ -900,9 +903,9 @@ export default function XRPDashboard() {
     }, [isZoomed, zoomStart, zoomEnd]);
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        if (!isDragging || !dragStartZoom || !chartContainerRef.current) return;
+        if (!isDragging || !dragStartZoom || !chartContainer) return;
 
-        const rect = chartContainerRef.current.getBoundingClientRect();
+        const rect = chartContainer.getBoundingClientRect();
         const deltaX = e.clientX - dragStartX;
         const visibleCount = dragStartZoom.end - dragStartZoom.start + 1;
         const pixelsPerBar = rect.width / visibleCount;
@@ -926,7 +929,7 @@ export default function XRPDashboard() {
 
         setZoomStart(newStart);
         setZoomEnd(newEnd);
-    }, [isDragging, dragStartX, dragStartZoom, displayData.length]);
+    }, [isDragging, dragStartX, dragStartZoom, displayData.length, chartContainer]);
 
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
@@ -953,10 +956,9 @@ export default function XRPDashboard() {
     }, [zoomStart, zoomEnd, displayData.length]);
 
     // Native wheel event handler for zoom (passive: false to allow preventDefault)
-    // Re-runs when timeRange or chartType changes to attach to new container
+    // Uses callback ref (chartContainer state) to properly detect when element mounts
     useEffect(() => {
-        const container = chartContainerRef.current;
-        if (!container) return;
+        if (!chartContainer) return;
 
         const handleWheel = (e: WheelEvent) => {
             const { zoomStart: currentZoomStart, zoomEnd: currentZoomEnd, dataLength } = zoomStateRef.current;
@@ -973,7 +975,7 @@ export default function XRPDashboard() {
             const currentEnd = currentZoomEnd ?? dataLength - 1;
             const visibleCount = currentEnd - currentStart + 1;
 
-            const rect = container.getBoundingClientRect();
+            const rect = chartContainer.getBoundingClientRect();
             const mouseXRatio = (e.clientX - rect.left) / rect.width;
 
             if (e.deltaY < 0) {
@@ -1014,9 +1016,9 @@ export default function XRPDashboard() {
             }
         };
 
-        container.addEventListener('wheel', handleWheel, { passive: false });
-        return () => container.removeEventListener('wheel', handleWheel);
-    }, [timeRange, chartType, displayData.length > 0]); // Re-attach when chart visibility changes
+        chartContainer.addEventListener('wheel', handleWheel, { passive: false });
+        return () => chartContainer.removeEventListener('wheel', handleWheel);
+    }, [chartContainer]); // Re-attach when container element changes
 
     // CSV Export function
     const handleExportCSV = useCallback(() => {
