@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, Cell, LineChart, Line, ComposedChart, ReferenceLine
@@ -343,11 +343,79 @@ export default function XRPDashboard() {
     const [inflow7d, setInflow7d] = useState(0);
     const [outflow7d, setOutflow7d] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [chartType, setChartType] = useState<ChartType>('composed');
+    const [chartType, setChartTypeState] = useState<ChartType>('composed');
     const [showMockData, setShowMockData] = useState(false);
-    const [timeRange, setTimeRange] = useState<TimeRange>('all');
+    const [timeRange, setTimeRangeState] = useState<TimeRange>('all');
     const [showCumulative, setShowCumulative] = useState(true);
     const [copied, setCopied] = useState(false);
+
+    // URL param helpers - update URL when chart state changes
+    const updateURL = useCallback((chart: ChartType, range: TimeRange) => {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams();
+        if (chart !== 'composed') params.set('chart', chart);
+        if (range !== 'all') params.set('range', range);
+        const newURL = params.toString() ? `?${params.toString()}` : window.location.pathname;
+        window.history.replaceState({}, '', newURL);
+    }, []);
+
+    const setChartType = useCallback((type: ChartType) => {
+        setChartTypeState(prev => {
+            updateURL(type, timeRange);
+            return type;
+        });
+    }, [timeRange, updateURL]);
+
+    const setTimeRange = useCallback((range: TimeRange) => {
+        setTimeRangeState(prev => {
+            updateURL(chartType, range);
+            return range;
+        });
+    }, [chartType, updateURL]);
+
+    // Initialize from URL params on mount
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        const chartParam = params.get('chart') as ChartType | null;
+        const rangeParam = params.get('range') as TimeRange | null;
+
+        if (chartParam && ['composed', 'bar', 'area', 'line'].includes(chartParam)) {
+            setChartTypeState(chartParam);
+        }
+        if (rangeParam && ['daily', 'weekly', 'monthly', 'yearly', 'all'].includes(rangeParam)) {
+            setTimeRangeState(rangeParam);
+        }
+    }, []);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't trigger if typing in an input
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+            const key = e.key.toLowerCase();
+
+            // Chart type shortcuts: 1-4
+            if (key === '1') setChartType('composed');
+            else if (key === '2') setChartType('bar');
+            else if (key === '3') setChartType('area');
+            else if (key === '4') setChartType('line');
+
+            // Time range shortcuts: d, w, m, y, a
+            else if (key === 'd') setTimeRange('daily');
+            else if (key === 'w') setTimeRange('weekly');
+            else if (key === 'm') setTimeRange('monthly');
+            else if (key === 'y') setTimeRange('yearly');
+            else if (key === 'a') setTimeRange('all');
+
+            // Toggle cumulative: c
+            else if (key === 'c') setShowCumulative(prev => !prev);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [setChartType, setTimeRange]);
 
     // Build dynamic ETF info map that includes any new ETFs from API data
     const dynamicETFInfo = useMemo(() => {
@@ -608,6 +676,34 @@ export default function XRPDashboard() {
             };
         });
     }, [baseData, timeRange]);
+
+    // CSV Export function
+    const handleExportCSV = useCallback(() => {
+        if (!displayData || displayData.length === 0) return;
+
+        const headers = ['Date', 'Net Flow (USD)', 'Cumulative Flow (USD)', 'Day Status'];
+        const rows = displayData.map(flow => [
+            flow.date,
+            flow.net_flow.toFixed(2),
+            (flow.cumulative_flow || 0).toFixed(2),
+            flow.dayStatus || 'trading'
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `xrp-etf-flows-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }, [displayData, timeRange]);
 
     // Calculate totals from display data
     const displayTotalInflow = showMockData
@@ -935,10 +1031,19 @@ https://isoeagle.io`;
                                     ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
                                     : 'bg-zinc-800/80 text-zinc-400 border-zinc-700/50 hover:text-white hover:bg-zinc-700/50'
                             }`}
-                            title="Toggle cumulative total line"
+                            title="Toggle cumulative total line (C)"
                         >
                             <span className="hidden sm:inline">Cumulative</span>
                             <span className="sm:hidden">&Sigma;</span>
+                        </button>
+                        {/* Export CSV */}
+                        <button
+                            onClick={handleExportCSV}
+                            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all duration-200 border bg-zinc-800/80 text-zinc-400 border-zinc-700/50 hover:text-white hover:bg-zinc-700/50"
+                            title="Export data as CSV"
+                        >
+                            <span className="hidden sm:inline">Export CSV</span>
+                            <span className="sm:hidden">CSV</span>
                         </button>
                     </div>
                 </div>
