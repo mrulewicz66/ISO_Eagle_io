@@ -12,14 +12,14 @@ interface CryptoPrice {
 }
 
 const ISO_20022_TOKENS = [
-    { symbol: 'XRP', name: 'Ripple', description: 'Cross-border payments' },
-    { symbol: 'XLM', name: 'Stellar Lumens', description: 'Financial inclusion' },
-    { symbol: 'XDC', name: 'XDC Network', description: 'Trade finance' },
-    { symbol: 'ALGO', name: 'Algorand', description: 'Pure proof-of-stake' },
-    { symbol: 'IOTA', name: 'IOTA', description: 'IoT & data integrity' },
-    { symbol: 'HBAR', name: 'Hedera Hashgraph', description: 'Enterprise DLT' },
-    { symbol: 'QNT', name: 'Quant', description: 'Blockchain interoperability' },
-    { symbol: 'ADA', name: 'Cardano', description: 'Proof-of-stake platform' },
+    { symbol: 'XRP', name: 'Ripple', description: 'Cross-border payments', hasETF: true },
+    { symbol: 'XLM', name: 'Stellar Lumens', description: 'Financial inclusion', hasETF: false },
+    { symbol: 'XDC', name: 'XDC Network', description: 'Trade finance', hasETF: false },
+    { symbol: 'ALGO', name: 'Algorand', description: 'Pure proof-of-stake', hasETF: false },
+    { symbol: 'IOTA', name: 'IOTA', description: 'IoT & data integrity', hasETF: false },
+    { symbol: 'HBAR', name: 'Hedera Hashgraph', description: 'Enterprise DLT', hasETF: false },
+    { symbol: 'QNT', name: 'Quant', description: 'Blockchain interoperability', hasETF: false },
+    { symbol: 'ADA', name: 'Cardano', description: 'Proof-of-stake platform', hasETF: false },
 ];
 
 // Token logos from CoinGecko
@@ -147,7 +147,7 @@ export default function ISO20022Table() {
                         {ISO_20022_TOKENS.map((token) => {
                             const priceData = getPriceData(token.symbol);
                             return (
-                                <tr key={token.symbol} className="hover:bg-purple-50 dark:hover:bg-purple-900/10">
+                                <tr key={token.symbol} className={`${token.hasETF ? 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30' : 'hover:bg-purple-50 dark:hover:bg-purple-900/10'}`}>
                                     <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className="relative w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 flex-shrink-0">
@@ -168,8 +168,13 @@ export default function ISO20022Table() {
                                                 )}
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-white">
+                                                <div className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-white flex items-center gap-1.5">
                                                     {token.symbol}
+                                                    {token.hasETF && (
+                                                        <span className="bg-green-500 text-white text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                                            ETF
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate">
                                                     {token.name}
