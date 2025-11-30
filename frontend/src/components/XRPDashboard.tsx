@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, Cell, LineChart, Line, ComposedChart, ReferenceLine
@@ -516,6 +516,14 @@ export default function XRPDashboard() {
     const [exchangeHistory, setExchangeHistory] = useState<ExchangeHistoryData | null>(null);
     const [reserveTimeRange, setReserveTimeRange] = useState<'30d' | '90d' | '1y' | 'all'>('all');
 
+    // Zoom state for ETF chart (indices into displayData)
+    const [zoomStart, setZoomStart] = useState<number | null>(null);
+    const [zoomEnd, setZoomEnd] = useState<number | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStartX, setDragStartX] = useState(0);
+    const [dragStartZoom, setDragStartZoom] = useState<{ start: number; end: number } | null>(null);
+    const chartContainerRef = useRef<HTMLDivElement>(null);
+
     // URL param helpers - update URL when chart state changes
     const updateURL = useCallback((chart: ChartType, range: TimeRange) => {
         if (typeof window === 'undefined') return;
@@ -860,6 +868,139 @@ export default function XRPDashboard() {
             };
         });
     }, [baseData, timeRange]);
+
+    // Reset zoom when timeRange changes
+    useEffect(() => {
+        setZoomStart(null);
+        setZoomEnd(null);
+    }, [timeRange]);
+
+    // Zoomed/sliced data for chart display
+    const zoomedDisplayData = useMemo(() => {
+        if (zoomStart === null || zoomEnd === null) return displayData;
+        return displayData.slice(zoomStart, zoomEnd + 1);
+    }, [displayData, zoomStart, zoomEnd]);
+
+    // Check if zoomed
+    const isZoomed = zoomStart !== null && zoomEnd !== null;
+
+    // Zoom percentage indicator
+    const zoomPercentage = useMemo(() => {
+        if (!isZoomed || displayData.length === 0) return 100;
+        const visibleCount = (zoomEnd! - zoomStart! + 1);
+        return Math.round((visibleCount / displayData.length) * 100);
+    }, [isZoomed, zoomStart, zoomEnd, displayData.length]);
+
+    // Handle wheel zoom
+    const handleChartWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+        if (displayData.length < 7) return; // Need at least 7 data points for zoom
+
+        e.preventDefault();
+        const MIN_VISIBLE = 7; // Minimum visible data points
+        const ZOOM_SPEED = 0.1;
+
+        const currentStart = zoomStart ?? 0;
+        const currentEnd = zoomEnd ?? displayData.length - 1;
+        const visibleCount = currentEnd - currentStart + 1;
+
+        // Calculate zoom center based on mouse position
+        const rect = chartContainerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const mouseXRatio = (e.clientX - rect.left) / rect.width;
+
+        if (e.deltaY < 0) {
+            // Scroll up = zoom in
+            const zoomAmount = Math.max(1, Math.floor(visibleCount * ZOOM_SPEED));
+            if (visibleCount <= MIN_VISIBLE) return;
+
+            const leftZoom = Math.floor(zoomAmount * mouseXRatio);
+            const rightZoom = zoomAmount - leftZoom;
+
+            const newStart = Math.min(currentStart + leftZoom, currentEnd - MIN_VISIBLE + 1);
+            const newEnd = Math.max(currentEnd - rightZoom, currentStart + MIN_VISIBLE - 1);
+
+            setZoomStart(Math.max(0, newStart));
+            setZoomEnd(Math.min(displayData.length - 1, newEnd));
+        } else {
+            // Scroll down = zoom out
+            if (visibleCount >= displayData.length) {
+                // Already at full view, reset
+                setZoomStart(null);
+                setZoomEnd(null);
+                return;
+            }
+
+            const zoomAmount = Math.max(1, Math.floor(visibleCount * ZOOM_SPEED));
+            const leftZoom = Math.floor(zoomAmount * mouseXRatio);
+            const rightZoom = zoomAmount - leftZoom;
+
+            const newStart = currentStart - leftZoom;
+            const newEnd = currentEnd + rightZoom;
+
+            if (newStart <= 0 && newEnd >= displayData.length - 1) {
+                setZoomStart(null);
+                setZoomEnd(null);
+            } else {
+                setZoomStart(Math.max(0, newStart));
+                setZoomEnd(Math.min(displayData.length - 1, newEnd));
+            }
+        }
+    }, [displayData.length, zoomStart, zoomEnd]);
+
+    // Handle pan (drag)
+    const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isZoomed) return;
+        setIsDragging(true);
+        setDragStartX(e.clientX);
+        setDragStartZoom({ start: zoomStart!, end: zoomEnd! });
+    }, [isZoomed, zoomStart, zoomEnd]);
+
+    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDragging || !dragStartZoom || !chartContainerRef.current) return;
+
+        const rect = chartContainerRef.current.getBoundingClientRect();
+        const deltaX = e.clientX - dragStartX;
+        const visibleCount = dragStartZoom.end - dragStartZoom.start + 1;
+        const pixelsPerBar = rect.width / visibleCount;
+        const barsDelta = Math.round(-deltaX / pixelsPerBar);
+
+        let newStart = dragStartZoom.start + barsDelta;
+        let newEnd = dragStartZoom.end + barsDelta;
+
+        // Clamp to bounds
+        if (newStart < 0) {
+            newEnd -= newStart;
+            newStart = 0;
+        }
+        if (newEnd >= displayData.length) {
+            newStart -= (newEnd - displayData.length + 1);
+            newEnd = displayData.length - 1;
+        }
+
+        newStart = Math.max(0, newStart);
+        newEnd = Math.min(displayData.length - 1, newEnd);
+
+        setZoomStart(newStart);
+        setZoomEnd(newEnd);
+    }, [isDragging, dragStartX, dragStartZoom, displayData.length]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        setDragStartZoom(null);
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+        if (isDragging) {
+            setIsDragging(false);
+            setDragStartZoom(null);
+        }
+    }, [isDragging]);
+
+    // Reset zoom function
+    const resetZoom = useCallback(() => {
+        setZoomStart(null);
+        setZoomEnd(null);
+    }, []);
 
     // CSV Export function
     const handleExportCSV = useCallback(() => {
@@ -1345,10 +1486,33 @@ https://isoeagle.io`;
                                 )}
                             </div>
                         ) : (
-                        <div className="h-[320px] sm:h-[450px]">
+                        <div
+                            ref={chartContainerRef}
+                            className={`h-[320px] sm:h-[450px] relative ${isZoomed ? 'cursor-grab' : ''} ${isDragging ? 'cursor-grabbing' : ''}`}
+                            onWheel={handleChartWheel}
+                            onMouseDown={handleMouseDown}
+                            onMouseMove={handleMouseMove}
+                            onMouseUp={handleMouseUp}
+                            onMouseLeave={handleMouseLeave}
+                        >
+                        {/* Zoom indicator */}
+                        {isZoomed && (
+                            <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+                                <span className="text-xs text-zinc-400 bg-zinc-800/90 px-2 py-1 rounded">
+                                    {zoomPercentage}% ({zoomedDisplayData.length} days)
+                                </span>
+                                <button
+                                    onClick={resetZoom}
+                                    className="text-xs text-white bg-zinc-700 hover:bg-zinc-600 px-2 py-1 rounded transition-colors"
+                                    title="Reset zoom (scroll down or double-click)"
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                        )}
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
-                                <ComposedChart data={displayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? 60 : 10, left: 40, bottom: 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? 60 : 10, left: 40, bottom: 30 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
@@ -1367,7 +1531,7 @@ https://isoeagle.io`;
                                         </filter>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(displayData.length)} height={50} />
+                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(zoomedDisplayData.length)} height={50} />
                                     <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
                                     {showCumulative && (
                                         <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 10, fill: '#60A5FA' }} />
@@ -1381,7 +1545,7 @@ https://isoeagle.io`;
                                     <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeDasharray="3 3" />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
-                                        {displayData.map((entry, index) => {
+                                        {zoomedDisplayData.map((entry, index) => {
                                             const isNonTrading = entry.dayStatus === 'weekend' || entry.dayStatus === 'holiday' || entry.dayStatus === 'pending';
                                             const isEarlyClose = entry.dayStatus === 'early_close';
                                             return (
@@ -1422,7 +1586,7 @@ https://isoeagle.io`;
                                     )}
                                 </ComposedChart>
                             ) : chartType === 'area' ? (
-                                <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 40, bottom: 30 }}>
+                                <AreaChart data={zoomedDisplayData} margin={{ top: 10, right: 10, left: 40, bottom: 30 }}>
                                     <defs>
                                         <linearGradient id="areaGradientPositive" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={0.6} />
@@ -1449,7 +1613,7 @@ https://isoeagle.io`;
                                     />
                                 </AreaChart>
                             ) : chartType === 'line' ? (
-                                <LineChart data={displayData} margin={{ top: 10, right: 10, left: 40, bottom: 30 }}>
+                                <LineChart data={zoomedDisplayData} margin={{ top: 10, right: 10, left: 40, bottom: 30 }}>
                                     <defs>
                                         <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
                                             <stop offset="0%" stopColor="#3B82F6" />
@@ -1472,7 +1636,7 @@ https://isoeagle.io`;
                                     />
                                 </LineChart>
                             ) : chartType === 'composed' ? (
-                                <ComposedChart data={displayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? 60 : 10, left: 40, bottom: 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? 60 : 10, left: 40, bottom: 30 }}>
                                     <defs>
                                         <linearGradient id="composedGreenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={0.8} />
@@ -1498,7 +1662,7 @@ https://isoeagle.io`;
                                     <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeWidth={2} />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
-                                        {displayData.map((entry, index) => {
+                                        {zoomedDisplayData.map((entry, index) => {
                                             const isNonTrading = entry.dayStatus === 'weekend' || entry.dayStatus === 'holiday' || entry.dayStatus === 'pending';
                                             const isEarlyClose = entry.dayStatus === 'early_close';
                                             return (
@@ -1609,7 +1773,7 @@ https://isoeagle.io`;
                         )}
                     </div>
                     <p className="text-[10px] sm:text-xs text-zinc-400 mt-2">
-                        Gray bars = market closed (weekends/holidays). Orange bars = early close days (1pm ET). Today&apos;s data appears after market close.
+                        Gray bars = market closed (weekends/holidays). Orange bars = early close days (1pm ET). Scroll to zoom, drag to pan.
                     </p>
                 </div>
             </div>
