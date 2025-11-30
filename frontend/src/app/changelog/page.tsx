@@ -10,14 +10,15 @@ interface Update {
 
 const updates: Update[] = [
     {
-        date: '2025-02-01',
+        date: '2025-11-30',
         changes: [
             'Added ETH ETF comparison - compare XRP ETF cumulative flows vs ETH ETF from launch day (purple line)',
             'Added cumulative totals display showing BTC/ETH flows at same number of trading days',
+            'Tooltip now shows both daily flow and cumulative for BTC/ETH comparisons',
         ]
     },
     {
-        date: '2025-01-31',
+        date: '2025-11-29',
         changes: [
             'Added BTC ETF comparison - compare XRP ETF cumulative flows vs BTC ETF from launch day',
             'Added chart zoom with scroll wheel (zoom in/out) and drag to pan',
@@ -33,14 +34,14 @@ const updates: Update[] = [
         ]
     },
     {
-        date: '2025-01-30',
+        date: '2025-11-28',
         changes: [
             'Added copy-to-clipboard share button for mobile users',
             'Added changelog page to track site updates',
         ]
     },
     {
-        date: '2025-01-29',
+        date: '2025-11-27',
         changes: [
             'Redesigned social preview images for better readability',
             'Added Twitter/X share button with pre-formatted tweets',
@@ -49,21 +50,21 @@ const updates: Update[] = [
         ]
     },
     {
-        date: '2025-01-28',
+        date: '2025-11-26',
         changes: [
             'Fixed timezone bug: ETF dates now display in UTC',
             'Added smart X-axis label spacing for better readability at different scales',
         ]
     },
     {
-        date: '2025-01-27',
+        date: '2025-11-25',
         changes: [
             'Show N/A for 24h exchange reserve change (CoinGlass API limitation)',
             'Updated support section to explain API costs',
         ]
     },
     {
-        date: '2025-01-26',
+        date: '2025-11-24',
         changes: [
             'Initial launch of ISO Eagle XRP ETF Monitor',
             'Real-time ETF flow tracking from CoinGlass + SoSoValue',
