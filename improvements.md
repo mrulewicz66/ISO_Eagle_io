@@ -187,15 +187,15 @@ If you want to cover API costs:
 - [x] 7-day trading volume in Market Cap section
 - [x] Changelog page (/changelog)
 - [x] Redesigned social preview images (OG + Twitter cards)
+- [x] Price correlation overlay (with toggle, P key shortcut)
+- [x] Keyboard shortcuts (1-4 chart types, D/W/M/Y/A time ranges, C cumulative, P price)
+- [x] Data export CSV/JSON
+- [x] Bookmarkable chart states (URL params)
 
 ### Not Started
-- [ ] Price correlation overlay
 - [ ] Daily email digest
 - [ ] ETF comparison stats (BTC/ETH vs XRP)
 - [ ] Historical exchange reserve chart
-- [ ] Keyboard shortcuts
-- [ ] Data export CSV/JSON
 - [ ] Coin selector architecture (for future ISO coins)
 - [ ] PWA support
 - [ ] Light theme toggle
-- [ ] Bookmarkable chart states (URL params)

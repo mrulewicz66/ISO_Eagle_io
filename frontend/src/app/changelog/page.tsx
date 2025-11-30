@@ -10,6 +10,15 @@ interface Update {
 
 const updates: Update[] = [
     {
+        date: '2025-01-31',
+        changes: [
+            'Added XRP price correlation overlay on ETF flow chart',
+            'Added keyboard shortcuts for power users (1-4, D/W/M/Y/A, C, P)',
+            'Added CSV data export for ETF flows',
+            'Added bookmarkable URL params for chart state sharing',
+        ]
+    },
+    {
         date: '2025-01-30',
         changes: [
             'Added copy-to-clipboard share button for mobile users',

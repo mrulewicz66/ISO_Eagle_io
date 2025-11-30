@@ -347,6 +347,7 @@ export default function XRPDashboard() {
     const [showMockData, setShowMockData] = useState(false);
     const [timeRange, setTimeRangeState] = useState<TimeRange>('all');
     const [showCumulative, setShowCumulative] = useState(true);
+    const [showPriceLine, setShowPriceLine] = useState(true);
     const [copied, setCopied] = useState(false);
 
     // URL param helpers - update URL when chart state changes
@@ -409,8 +410,9 @@ export default function XRPDashboard() {
             else if (key === 'y') setTimeRange('yearly');
             else if (key === 'a') setTimeRange('all');
 
-            // Toggle cumulative: c
+            // Toggle cumulative: c, price: p
             else if (key === 'c') setShowCumulative(prev => !prev);
+            else if (key === 'p') setShowPriceLine(prev => !prev);
         };
 
         window.addEventListener('keydown', handleKeyDown);
@@ -1036,6 +1038,19 @@ https://isoeagle.io`;
                             <span className="hidden sm:inline">Cumulative</span>
                             <span className="sm:hidden">&Sigma;</span>
                         </button>
+                        {/* Price Line Toggle */}
+                        <button
+                            onClick={() => setShowPriceLine(!showPriceLine)}
+                            className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all duration-200 border ${
+                                showPriceLine
+                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
+                                    : 'bg-zinc-800/80 text-zinc-400 border-zinc-700/50 hover:text-white hover:bg-zinc-700/50'
+                            }`}
+                            title="Toggle XRP price line (P)"
+                        >
+                            <span className="hidden sm:inline">Price</span>
+                            <span className="sm:hidden">$</span>
+                        </button>
                         {/* Export CSV */}
                         <button
                             onClick={handleExportCSV}
@@ -1118,7 +1133,7 @@ https://isoeagle.io`;
                         <div className="h-[320px] sm:h-[450px]">
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
-                                <ComposedChart data={displayData} margin={{ top: 10, right: showCumulative ? 60 : 10, left: 40, bottom: 30 }}>
+                                <ComposedChart data={displayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? 60 : 10, left: 40, bottom: 30 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
@@ -1140,7 +1155,13 @@ https://isoeagle.io`;
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(displayData.length)} height={50} />
                                     <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
                                     {showCumulative && (
-                                        <YAxis yAxisId="right" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 10, fill: '#60A5FA' }} />
+                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 10, fill: '#60A5FA' }} />
+                                    )}
+                                    {showPriceLine && !showCumulative && (
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: 10, fill: '#F59E0B' }} domain={['auto', 'auto']} />
+                                    )}
+                                    {showPriceLine && showCumulative && (
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
                                     )}
                                     <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeDasharray="3 3" />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
@@ -1167,8 +1188,20 @@ https://isoeagle.io`;
                                             strokeWidth={3}
                                             strokeDasharray="5 5"
                                             dot={false}
-                                            yAxisId="right"
+                                            yAxisId="cumulative"
                                             name="Cumulative"
+                                        />
+                                    )}
+                                    {showPriceLine && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="price_usd"
+                                            stroke="#F59E0B"
+                                            strokeWidth={2}
+                                            dot={{ fill: '#F59E0B', strokeWidth: 1, r: 2, stroke: '#1F2937' }}
+                                            yAxisId="price"
+                                            name="XRP Price"
+                                            connectNulls
                                         />
                                     )}
                                 </ComposedChart>
@@ -1223,7 +1256,7 @@ https://isoeagle.io`;
                                     />
                                 </LineChart>
                             ) : chartType === 'composed' ? (
-                                <ComposedChart data={displayData} margin={{ top: 10, right: showCumulative ? 60 : 10, left: 40, bottom: 30 }}>
+                                <ComposedChart data={displayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? 60 : 10, left: 40, bottom: 30 }}>
                                     <defs>
                                         <linearGradient id="composedGreenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={0.8} />
@@ -1238,7 +1271,13 @@ https://isoeagle.io`;
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     {showCumulative && (
-                                        <YAxis yAxisId="right" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 10, fill: '#60A5FA' }} />
+                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 10, fill: '#60A5FA' }} />
+                                    )}
+                                    {showPriceLine && !showCumulative && (
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: 10, fill: '#F59E0B' }} domain={['auto', 'auto']} />
+                                    )}
+                                    {showPriceLine && showCumulative && (
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
                                     )}
                                     <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeWidth={2} />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} />} />
@@ -1272,8 +1311,20 @@ https://isoeagle.io`;
                                             strokeWidth={3}
                                             strokeDasharray="5 5"
                                             dot={false}
-                                            yAxisId="right"
+                                            yAxisId="cumulative"
                                             name="Cumulative"
+                                        />
+                                    )}
+                                    {showPriceLine && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="price_usd"
+                                            stroke="#F59E0B"
+                                            strokeWidth={2}
+                                            dot={{ fill: '#F59E0B', strokeWidth: 1, r: 2, stroke: '#1F2937' }}
+                                            yAxisId="price"
+                                            name="XRP Price"
+                                            connectNulls
                                         />
                                     )}
                                 </ComposedChart>
