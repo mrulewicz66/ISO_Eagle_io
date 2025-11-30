@@ -1,0 +1,142 @@
+'use client';
+
+import Link from 'next/link';
+
+interface Update {
+    date: string;
+    version?: string;
+    changes: string[];
+}
+
+const updates: Update[] = [
+    {
+        date: '2025-01-30',
+        changes: [
+            'Added copy-to-clipboard share button for mobile users',
+            'Added changelog page to track site updates',
+        ]
+    },
+    {
+        date: '2025-01-29',
+        changes: [
+            'Redesigned social preview images for better readability',
+            'Added Twitter/X share button with pre-formatted tweets',
+            'Added cumulative ETF flow line with toggle',
+            'Added 7-day trading volume to Market Cap section',
+        ]
+    },
+    {
+        date: '2025-01-28',
+        changes: [
+            'Fixed timezone bug: ETF dates now display in UTC',
+            'Added smart X-axis label spacing for better readability at different scales',
+        ]
+    },
+    {
+        date: '2025-01-27',
+        changes: [
+            'Show N/A for 24h exchange reserve change (CoinGlass API limitation)',
+            'Updated support section to explain API costs',
+        ]
+    },
+    {
+        date: '2025-01-26',
+        changes: [
+            'Initial launch of ISO Eagle XRP ETF Monitor',
+            'Real-time ETF flow tracking from CoinGlass + SoSoValue',
+            'Exchange reserves monitoring',
+            'ISO 20022 token table',
+            'Multiple chart types (composed, bar, area, line)',
+            'Time range filtering (7d, 30d, 90d, 1y, all)',
+            'Mobile-responsive dark theme design',
+        ]
+    },
+];
+
+export default function ChangelogPage() {
+    return (
+        <div className="min-h-screen bg-zinc-950 text-white">
+            <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
+                {/* Header */}
+                <div className="mb-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-6"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Dashboard
+                    </Link>
+                    <h1 className="text-3xl sm:text-4xl font-bold mb-2">Changelog</h1>
+                    <p className="text-zinc-400">Track all updates and improvements to ISO Eagle</p>
+                </div>
+
+                {/* Updates List */}
+                <div className="space-y-8">
+                    {updates.map((update, index) => (
+                        <div key={update.date} className="relative">
+                            {/* Timeline connector */}
+                            {index < updates.length - 1 && (
+                                <div className="absolute left-[7px] top-8 bottom-0 w-0.5 bg-zinc-800" />
+                            )}
+
+                            <div className="flex gap-4">
+                                {/* Timeline dot */}
+                                <div className="relative">
+                                    <div className={`w-4 h-4 rounded-full mt-1.5 ${
+                                        index === 0
+                                            ? 'bg-green-500 ring-4 ring-green-500/20'
+                                            : 'bg-zinc-700'
+                                    }`} />
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 pb-8">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <time className="text-lg font-semibold text-white">
+                                            {new Date(update.date).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+                                        </time>
+                                        {index === 0 && (
+                                            <span className="px-2 py-0.5 text-xs font-medium bg-green-500/20 text-green-400 rounded-full">
+                                                Latest
+                                            </span>
+                                        )}
+                                    </div>
+                                    <ul className="space-y-2">
+                                        {update.changes.map((change, changeIndex) => (
+                                            <li
+                                                key={changeIndex}
+                                                className="flex items-start gap-2 text-zinc-300"
+                                            >
+                                                <span className="text-zinc-600 mt-1.5">•</span>
+                                                <span>{change}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Footer */}
+                <div className="mt-12 pt-8 border-t border-zinc-800 text-center text-zinc-500 text-sm">
+                    <p>Have a feature request?</p>
+                    <a
+                        href="https://twitter.com/isaboripple"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                        Let us know on X/Twitter
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+}
