@@ -1972,35 +1972,38 @@ https://isoeagle.io`;
                     </div>
                 )}
 
-                {/* ETF Breakdown Legend */}
-                {latestETFBreakdown.length > 0 && latestTradingDayData && (
-                    <div className="mt-1 sm:mt-4 pt-2 sm:pt-4 border-t border-zinc-700">
-                        {/* Summary row with date, net flow, cumulative, price */}
-                        <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-2 mb-2 sm:mb-3">
-                            <h3 className="text-xs sm:text-sm font-medium text-zinc-400">
-                                {latestTradingDayData.displayDate || new Date(latestTradingDayData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            </h3>
-                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-sm">
-                                <div>
-                                    <span className="text-zinc-500">Net: </span>
-                                    <span className={`font-semibold ${latestTradingDayData.net_flow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                        {latestTradingDayData.net_flow >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.net_flow)}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-zinc-500">Total: </span>
-                                    <span className={`font-semibold ${(latestTradingDayData.cumulative_flow || 0) >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                                        {(latestTradingDayData.cumulative_flow || 0) >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.cumulative_flow || 0)}
-                                    </span>
-                                </div>
-                                {latestTradingDayData.price_usd && latestTradingDayData.price_usd > 0 && (
-                                    <div>
-                                        <span className="text-zinc-500">XRP: </span>
-                                        <span className="font-semibold text-amber-400">${latestTradingDayData.price_usd.toFixed(4)}</span>
-                                    </div>
-                                )}
+                {/* Latest Day Summary - above divider */}
+                {latestTradingDayData && (
+                    <div className="mt-1 sm:mt-4 flex flex-wrap items-center justify-between gap-1 sm:gap-2">
+                        <h3 className="text-xs sm:text-sm font-medium text-zinc-400">
+                            {latestTradingDayData.displayDate || new Date(latestTradingDayData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-sm">
+                            <div>
+                                <span className="text-zinc-500">Net: </span>
+                                <span className={`font-semibold ${latestTradingDayData.net_flow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {latestTradingDayData.net_flow >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.net_flow)}
+                                </span>
                             </div>
+                            <div>
+                                <span className="text-zinc-500">Total: </span>
+                                <span className={`font-semibold ${(latestTradingDayData.cumulative_flow || 0) >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                                    {(latestTradingDayData.cumulative_flow || 0) >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.cumulative_flow || 0)}
+                                </span>
+                            </div>
+                            {latestTradingDayData.price_usd && latestTradingDayData.price_usd > 0 && (
+                                <div>
+                                    <span className="text-zinc-500">XRP: </span>
+                                    <span className="font-semibold text-amber-400">${latestTradingDayData.price_usd.toFixed(4)}</span>
+                                </div>
+                            )}
                         </div>
+                    </div>
+                )}
+
+                {/* ETF Breakdown Legend - below divider */}
+                {latestETFBreakdown.length > 0 && (
+                    <div className="mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-zinc-700">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-3">
                             {latestETFBreakdown.map(etf => (
                                 <div key={etf.ticker} className="flex items-center gap-1.5 sm:gap-3 bg-zinc-800/50 p-1.5 sm:p-3 rounded-lg">
