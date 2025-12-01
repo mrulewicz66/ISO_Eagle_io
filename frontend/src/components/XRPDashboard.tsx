@@ -1975,18 +1975,15 @@ https://isoeagle.io`;
                 {/* Latest Day Summary - above divider */}
                 {latestTradingDayData && (
                     <div className="mt-1 sm:mt-4 flex flex-wrap items-center justify-between gap-1 sm:gap-2">
-                        <h3 className="text-xs sm:text-sm font-medium text-zinc-400">
-                            {latestTradingDayData.displayDate || new Date(latestTradingDayData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </h3>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-sm">
                             <div>
-                                <span className="text-zinc-500">Net: </span>
+                                <span className="text-zinc-500">Daily: </span>
                                 <span className={`font-semibold ${latestTradingDayData.net_flow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                     {latestTradingDayData.net_flow >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.net_flow)}
                                 </span>
                             </div>
                             <div>
-                                <span className="text-zinc-500">Total: </span>
+                                <span className="text-zinc-500">Cumulative: </span>
                                 <span className={`font-semibold ${(latestTradingDayData.cumulative_flow || 0) >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                                     {(latestTradingDayData.cumulative_flow || 0) >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.cumulative_flow || 0)}
                                 </span>
@@ -1998,6 +1995,9 @@ https://isoeagle.io`;
                                 </div>
                             )}
                         </div>
+                        <h3 className="text-xs sm:text-sm font-medium text-zinc-400">
+                            {latestTradingDayData.displayDate || new Date(latestTradingDayData.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </h3>
                     </div>
                 )}
 
@@ -2011,13 +2011,12 @@ https://isoeagle.io`;
                                         className="w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                                         style={{ backgroundColor: dynamicETFInfo[etf.ticker]?.color || '#6B7280' }}
                                     />
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-1 sm:gap-2">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center justify-between gap-1">
                                             <span className="text-[10px] sm:text-sm font-bold text-white">{etf.ticker}</span>
-                                            <span className="text-[10px] sm:text-xs text-zinc-500 hidden sm:inline">•</span>
-                                            <span className="text-[10px] sm:text-xs text-zinc-400 truncate hidden sm:inline">{dynamicETFInfo[etf.ticker]?.institution || 'Unknown'}</span>
+                                            <span className={`text-[10px] sm:text-sm font-semibold ${etf.flow_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>{etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}</span>
                                         </div>
-                                        <div className={`text-[10px] sm:text-sm font-medium ${etf.flow_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>{etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}</div>
+                                        <div className="text-[9px] sm:text-xs text-zinc-400 truncate">{dynamicETFInfo[etf.ticker]?.institution || 'Unknown'}</div>
                                     </div>
                                 </div>
                             ))}
