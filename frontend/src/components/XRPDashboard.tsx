@@ -2107,6 +2107,9 @@ https://isoeagle.io`;
                             <div className={`text-xs sm:text-sm ${exchangeData.totals.change_30d < 0 ? 'text-green-400' : 'text-red-400'}`}>
                                 {exchangeData.totals.change_30d < 0 ? '' : '+'}{formatXRP(exchangeData.totals.change_30d)} (30d)
                             </div>
+                            <div className={`text-xs sm:text-sm ${exchangeData.totals.change_7d < 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {exchangeData.totals.change_7d < 0 ? '' : '+'}{formatXRP(exchangeData.totals.change_7d)} (7d)
+                            </div>
                         </div>
                     </div>
 
