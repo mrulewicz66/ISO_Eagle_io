@@ -1200,10 +1200,11 @@ export default function XRPDashboard() {
     const netFlow = displayTotalInflow - displayTotalOutflow;
 
     // Get latest ETF breakdown from most recent trading day (not weekend/holiday)
+    // Use displayData which has cumulative_flow calculated
     const latestTradingDayData = useMemo(() => {
-        const tradingDays = etfFlows.filter(f => f.dayStatus === 'trading' || f.dayStatus === 'early_close');
+        const tradingDays = displayData.filter(f => f.dayStatus === 'trading' || f.dayStatus === 'early_close');
         return tradingDays.length > 0 ? tradingDays[tradingDays.length - 1] : null;
-    }, [etfFlows]);
+    }, [displayData]);
 
     // Show ALL ETFs that have appeared in data, even with $0 flow
     const latestETFBreakdown = useMemo(() => {
