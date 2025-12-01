@@ -1684,7 +1684,7 @@ https://isoeagle.io`;
                         ) : (
                         <div
                             ref={chartContainerRef}
-                            className={`h-[320px] sm:h-[450px] relative ${isZoomed ? 'cursor-grab' : ''} ${isDragging ? 'cursor-grabbing' : ''}`}
+                            className={`h-[320px] sm:h-[450px] relative overflow-hidden w-full ${isZoomed ? 'cursor-grab' : ''} ${isDragging ? 'cursor-grabbing' : ''}`}
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUp}
@@ -1707,7 +1707,7 @@ https://isoeagle.io`;
                         )}
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
-                                <ComposedChart data={zoomedDisplayData} margin={{ top: isMobile ? 0 : 5, right: isMobile ? -10 : ((showCumulative || showPriceLine) ? 60 : 10), left: isMobile ? -10 : 40, bottom: isMobile ? 5 : 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: 0, right: isMobile ? 0 : ((showCumulative || showPriceLine) ? 60 : 10), left: isMobile ? 0 : 40, bottom: isMobile ? 0 : 30 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
@@ -1726,13 +1726,13 @@ https://isoeagle.io`;
                                         </filter>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={isMobile ? 0.3 : 0.5} vertical={!isMobile} />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(zoomedDisplayData.length)} height={isMobile ? 25 : 50} />
-                                    <YAxis yAxisId="left" stroke="#9CA3AF" domain={isMobile ? ["auto", (dataMax: number) => dataMax * 1.3] : ["auto", "auto"]} tickFormatter={(v) => isMobile ? (Math.abs(v) >= 1e9 ? (v/1e9).toFixed(0) + "B" : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(0) + "M" : String(Math.round(v))) : `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} width={isMobile ? 8 : 60} tickCount={isMobile ? 5 : undefined} />
+                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={isMobile ? false : CustomXAxisTick} axisLine={{ stroke: "#4B5563" }} interval={getXAxisInterval(zoomedDisplayData.length)} height={isMobile ? 0 : 50} hide={isMobile} />
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" domain={isMobile ? ["auto", (dataMax: number) => dataMax * 1.3] : ["auto", "auto"]} tickFormatter={(v) => isMobile ? (Math.abs(v) >= 1e9 ? (v/1e9).toFixed(0) + "B" : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(0) + "M" : String(Math.round(v))) : `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: "#9CA3AF" }} axisLine={{ stroke: "#4B5563" }} width={isMobile ? 0 : 60} tickCount={isMobile ? 5 : undefined} hide={isMobile} />
                                     {showCumulative && (
-                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 8 : 60} />
+                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: "#60A5FA" }} width={isMobile ? 0 : 60} hide={isMobile} />
                                     )}
                                     {showPriceLine && !showCumulative && (
-                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} width={isMobile ? 8 : 60} />
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: "#F59E0B" }} domain={["auto", "auto"]} width={isMobile ? 0 : 60} hide={isMobile} />
                                     )}
                                     {showPriceLine && showCumulative && (
                                         <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
