@@ -40,12 +40,14 @@ router.get('/etf-flows', async (req, res) => {
 // Get exchange reserves
 router.get('/exchange-reserves', async (req, res) => {
     try {
-        const { crypto, hours = 24 } = req.query;
+        const { crypto } = req.query;
 
+        // Get latest balance per exchange (exclude 'unknown' and zero balances)
         let query = `
-            SELECT timestamp, crypto_symbol, exchange_name, balance
+            SELECT DISTINCT ON (exchange_name)
+                timestamp, crypto_symbol, exchange_name, balance
             FROM exchange_reserves
-            WHERE timestamp >= NOW() - INTERVAL '${parseInt(hours)} hours'
+            WHERE exchange_name != 'unknown' AND balance::numeric > 0
         `;
 
         const params = [];
@@ -54,7 +56,7 @@ router.get('/exchange-reserves', async (req, res) => {
             query += ` AND crypto_symbol = $1`;
         }
 
-        query += ` ORDER BY timestamp DESC`;
+        query += ` ORDER BY exchange_name, timestamp DESC`;
 
         const result = await db.query(query, params);
         res.json(result.rows);
