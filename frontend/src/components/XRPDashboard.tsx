@@ -1981,7 +1981,7 @@ https://isoeagle.io`;
                         <div>
                             <span className="text-zinc-500">Last Trading Day: </span>
                             <span className="font-semibold text-zinc-300">
-                                {new Date(latestTradingDayData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                {new Date(latestTradingDayData.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
                         </div>
                         <div>
