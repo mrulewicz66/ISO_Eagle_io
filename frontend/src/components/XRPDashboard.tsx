@@ -826,10 +826,10 @@ export default function XRPDashboard() {
 
     const formatFlow = (num: number) => {
         const abs = Math.abs(num);
-        if (abs >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
-        if (abs >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
-        if (abs >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
-        if (abs >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
+        if (abs >= 1e12) return (num / 1e12).toFixed(0) + 'T';
+        if (abs >= 1e9) return (num / 1e9).toFixed(abs >= 10e9 ? 0 : 1) + 'B';
+        if (abs >= 1e6) return (num / 1e6).toFixed(0) + 'M';
+        if (abs >= 1e3) return (num / 1e3).toFixed(0) + 'K';
         return num.toFixed(0);
     };
 
@@ -1356,11 +1356,11 @@ https://isoeagle.io`;
                             title="Copy to clipboard"
                         >
                             {copied ? (
-                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isMobile ? 0.3 : 2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             ) : (
-                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isMobile ? 0.3 : 2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
                             )}
@@ -1760,7 +1760,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="cumulative_flow"
                                             stroke="#60A5FA"
-                                            strokeWidth={3}
+                                            strokeWidth={isMobile ? 0.5 : 3}
                                             strokeDasharray="5 5"
                                             dot={false}
                                             yAxisId="cumulative"
@@ -1772,7 +1772,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="price_usd"
                                             stroke="#F59E0B"
-                                            strokeWidth={2}
+                                            strokeWidth={isMobile ? 0.3 : 2}
                                             dot={{ fill: '#F59E0B', strokeWidth: 1, r: 2, stroke: '#1F2937' }}
                                             yAxisId="price"
                                             name="XRP Price"
@@ -1784,7 +1784,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="btc_cumulative_flow"
                                             stroke="#F97316"
-                                            strokeWidth={2}
+                                            strokeWidth={isMobile ? 0.3 : 2}
                                             strokeDasharray="3 3"
                                             dot={false}
                                             yAxisId="cumulative"
@@ -1797,7 +1797,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="eth_cumulative_flow"
                                             stroke="#8B5CF6"
-                                            strokeWidth={2}
+                                            strokeWidth={isMobile ? 0.3 : 2}
                                             strokeDasharray="3 3"
                                             dot={false}
                                             yAxisId="cumulative"
@@ -1821,13 +1821,13 @@ https://isoeagle.io`;
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
-                                    <ReferenceLine y={0} stroke="#6B7280" strokeWidth={2} />
+                                    <ReferenceLine y={0} stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Area
                                         type="monotone"
                                         dataKey="net_flow"
                                         stroke="#8B5CF6"
-                                        strokeWidth={3}
+                                        strokeWidth={isMobile ? 0.5 : 3}
                                         fill="url(#areaGradientPositive)"
                                         dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
                                         activeDot={{ r: 6, fill: '#A78BFA', stroke: '#fff', strokeWidth: 2 }}
@@ -1845,7 +1845,7 @@ https://isoeagle.io`;
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
                                     <YAxis stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
-                                    <ReferenceLine y={0} stroke="#6B7280" strokeWidth={2} strokeDasharray="5 5" />
+                                    <ReferenceLine y={0} stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} strokeDasharray="5 5" />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Line
                                         type="monotone"
@@ -1880,7 +1880,7 @@ https://isoeagle.io`;
                                     {showPriceLine && showCumulative && (
                                         <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
                                     )}
-                                    <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeWidth={2} />
+                                    <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} showBTCComparison={showBTCComparison} showETHComparison={showETHComparison} />} />
                                     <Bar dataKey="net_flow" name="Net Flow" radius={[4, 4, 0, 0]} yAxisId="left">
                                         {zoomedDisplayData.map((entry, index) => {
@@ -1901,7 +1901,7 @@ https://isoeagle.io`;
                                         type="monotone"
                                         dataKey="net_flow"
                                         stroke="#FBBF24"
-                                        strokeWidth={3}
+                                        strokeWidth={isMobile ? 0.5 : 3}
                                         dot={{ fill: '#FBBF24', strokeWidth: 2, r: 4, stroke: '#1F2937' }}
                                         yAxisId="left"
                                     />
@@ -1910,7 +1910,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="cumulative_flow"
                                             stroke="#60A5FA"
-                                            strokeWidth={3}
+                                            strokeWidth={isMobile ? 0.5 : 3}
                                             strokeDasharray="5 5"
                                             dot={false}
                                             yAxisId="cumulative"
@@ -1922,7 +1922,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="price_usd"
                                             stroke="#F59E0B"
-                                            strokeWidth={2}
+                                            strokeWidth={isMobile ? 0.3 : 2}
                                             dot={{ fill: '#F59E0B', strokeWidth: 1, r: 2, stroke: '#1F2937' }}
                                             yAxisId="price"
                                             name="XRP Price"
@@ -1934,7 +1934,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="btc_cumulative_flow"
                                             stroke="#F97316"
-                                            strokeWidth={2}
+                                            strokeWidth={isMobile ? 0.3 : 2}
                                             strokeDasharray="3 3"
                                             dot={false}
                                             yAxisId="cumulative"
@@ -1947,7 +1947,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="eth_cumulative_flow"
                                             stroke="#8B5CF6"
-                                            strokeWidth={2}
+                                            strokeWidth={isMobile ? 0.3 : 2}
                                             strokeDasharray="3 3"
                                             dot={false}
                                             yAxisId="cumulative"
@@ -2169,7 +2169,7 @@ https://isoeagle.io`;
                                             type="monotone"
                                             dataKey="total"
                                             stroke="#8B5CF6"
-                                            strokeWidth={2}
+                                            strokeWidth={isMobile ? 0.3 : 2}
                                             fill="url(#reserveGradient)"
                                             dot={false}
                                         />
