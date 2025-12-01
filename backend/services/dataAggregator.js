@@ -288,9 +288,9 @@ class DataAggregator {
 
         for (const reserve of reserveData) {
             try {
-                // CoinGlass format: { exchange, balance, balanceUsd, ... }
-                const exchangeName = reserve.exchange || reserve.exchangeName || 'unknown';
-                const balance = reserve.balance || reserve.value || 0;
+                // CoinGlass format: { exchange_name, total_balance, balance_change_1d, ... }
+                const exchangeName = reserve.exchange_name || reserve.exchange || reserve.exchangeName || 'unknown';
+                const balance = reserve.total_balance || reserve.balance || reserve.value || 0;
 
                 await db.query(`
                     INSERT INTO exchange_reserves (timestamp, crypto_symbol, balance, exchange_name, source)
