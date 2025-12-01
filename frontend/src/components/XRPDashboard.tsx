@@ -1973,23 +1973,48 @@ https://isoeagle.io`;
                 )}
 
                 {/* ETF Breakdown Legend */}
-                {latestETFBreakdown.length > 0 && (
-                    <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-zinc-700">
-                        <h3 className="text-xs sm:text-sm font-medium text-zinc-400 mb-2 sm:mb-3">Latest Day ETF Breakdown</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                {latestETFBreakdown.length > 0 && latestTradingDayData && (
+                    <div className="mt-1 sm:mt-4 pt-2 sm:pt-4 border-t border-zinc-700">
+                        {/* Summary row with date, net flow, cumulative, price */}
+                        <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-2 mb-2 sm:mb-3">
+                            <h3 className="text-xs sm:text-sm font-medium text-zinc-400">
+                                {latestTradingDayData.displayDate || new Date(latestTradingDayData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-sm">
+                                <div>
+                                    <span className="text-zinc-500">Net: </span>
+                                    <span className={`font-semibold ${latestTradingDayData.net_flow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {latestTradingDayData.net_flow >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.net_flow)}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-zinc-500">Total: </span>
+                                    <span className={`font-semibold ${(latestTradingDayData.cumulative_flow || 0) >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                                        {(latestTradingDayData.cumulative_flow || 0) >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.cumulative_flow || 0)}
+                                    </span>
+                                </div>
+                                {latestTradingDayData.price_usd && latestTradingDayData.price_usd > 0 && (
+                                    <div>
+                                        <span className="text-zinc-500">XRP: </span>
+                                        <span className="font-semibold text-amber-400">${latestTradingDayData.price_usd.toFixed(4)}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-3">
                             {latestETFBreakdown.map(etf => (
-                                <div key={etf.ticker} className="flex items-center gap-2 sm:gap-3 bg-zinc-800/50 p-2 sm:p-3 rounded-lg">
+                                <div key={etf.ticker} className="flex items-center gap-1.5 sm:gap-3 bg-zinc-800/50 p-1.5 sm:p-3 rounded-lg">
                                     <div
-                                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
+                                        className="w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                                         style={{ backgroundColor: dynamicETFInfo[etf.ticker]?.color || '#6B7280' }}
                                     />
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-1 sm:gap-2">
-                                            <span className="text-xs sm:text-sm font-bold text-white">{etf.ticker}</span>
+                                            <span className="text-[10px] sm:text-sm font-bold text-white">{etf.ticker}</span>
                                             <span className="text-[10px] sm:text-xs text-zinc-500 hidden sm:inline">•</span>
                                             <span className="text-[10px] sm:text-xs text-zinc-400 truncate hidden sm:inline">{dynamicETFInfo[etf.ticker]?.institution || 'Unknown'}</span>
                                         </div>
-                                        <div className="text-xs sm:text-sm font-medium text-green-400">${formatFlow(etf.flow_usd)}</div>
+                                        <div className={`text-[10px] sm:text-sm font-medium ${etf.flow_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>{etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}</div>
                                     </div>
                                 </div>
                             ))}
