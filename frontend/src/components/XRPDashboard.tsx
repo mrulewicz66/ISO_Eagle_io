@@ -761,7 +761,7 @@ export default function XRPDashboard() {
                     setEtfFlows(filledData);
 
                     // Calculate stats from actual trading data only
-                    const tradingDays = filledData.filter(f => f.dayStatus === 'trading');
+                    const tradingDays = filledData.filter(f => f.dayStatus === 'trading' || f.dayStatus === 'early_close');
                     const inflow = tradingDays.filter(f => f.net_flow > 0).reduce((sum, f) => sum + f.net_flow, 0);
                     const outflow = Math.abs(tradingDays.filter(f => f.net_flow < 0).reduce((sum, f) => sum + f.net_flow, 0));
                     const avgDailyInflow = tradingDays.length > 0 ? inflow / tradingDays.length : 0;
@@ -957,7 +957,7 @@ export default function XRPDashboard() {
         // Also map BTC/ETH comparison data by day index (day 0 = ETF launch)
         let cumulative = 0;
         return filteredData.map((flow, index) => {
-            if (flow.dayStatus === 'trading') {
+            if (flow.dayStatus === 'trading' || flow.dayStatus === 'early_close') {
                 cumulative += flow.net_flow;
             }
             // Get BTC/ETH flows for the same day index from start
@@ -1192,7 +1192,7 @@ export default function XRPDashboard() {
 
     // Get latest ETF breakdown from most recent trading day (not weekend/holiday)
     const latestTradingDayData = useMemo(() => {
-        const tradingDays = etfFlows.filter(f => f.dayStatus === 'trading');
+        const tradingDays = etfFlows.filter(f => f.dayStatus === 'trading' || f.dayStatus === 'early_close');
         return tradingDays.length > 0 ? tradingDays[tradingDays.length - 1] : null;
     }, [etfFlows]);
 
