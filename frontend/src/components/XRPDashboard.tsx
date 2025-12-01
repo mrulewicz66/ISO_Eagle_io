@@ -2008,19 +2008,19 @@ https://isoeagle.io`;
                 {/* ETF Breakdown Legend - below divider */}
                 {latestETFBreakdown.length > 0 && (
                     <div className="mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-zinc-700">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-3">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1 sm:gap-2">
                             {latestETFBreakdown.map(etf => (
-                                <div key={etf.ticker} className="flex items-center gap-1.5 sm:gap-3 bg-zinc-800/50 p-1.5 sm:p-3 rounded-lg">
+                                <div key={etf.ticker} className="flex items-center gap-1 sm:gap-1.5 bg-zinc-800/50 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded">
                                     <div
-                                        className="w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
+                                        className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0"
                                         style={{ backgroundColor: dynamicETFInfo[etf.ticker]?.color || '#6B7280' }}
                                     />
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center justify-between gap-1">
-                                            <span className="text-[10px] sm:text-sm font-bold text-white">{etf.ticker}</span>
-                                            <span className={`text-[10px] sm:text-sm font-semibold ${etf.flow_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>{etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}</span>
+                                        <div className="flex items-center justify-between gap-0.5">
+                                            <span className="text-[9px] sm:text-xs font-bold text-white">{etf.ticker}</span>
+                                            <span className={`text-[9px] sm:text-xs font-semibold ${etf.flow_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>{etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}</span>
                                         </div>
-                                        <div className="text-[9px] sm:text-xs text-zinc-400 truncate">{dynamicETFInfo[etf.ticker]?.institution || 'Unknown'}</div>
+                                        <div className="text-[8px] sm:text-[10px] text-zinc-400 truncate leading-tight">{dynamicETFInfo[etf.ticker]?.institution || 'Unknown'}</div>
                                     </div>
                                 </div>
                             ))}
