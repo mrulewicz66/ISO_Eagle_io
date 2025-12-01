@@ -2010,7 +2010,7 @@ https://isoeagle.io`;
                     <div className="mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-zinc-700">
                         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1 sm:gap-2">
                             {latestETFBreakdown.map(etf => (
-                                <div key={etf.ticker} className="flex items-center gap-1 sm:gap-1.5 bg-zinc-800/50 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded">
+                                <div key={etf.ticker} className="flex items-center gap-1 sm:gap-1.5 bg-zinc-800/50 px-0.5 py-1 sm:px-1 sm:py-1.5 rounded">
                                     <div
                                         className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0"
                                         style={{ backgroundColor: dynamicETFInfo[etf.ticker]?.color || '#6B7280' }}
