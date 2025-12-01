@@ -1493,7 +1493,7 @@ https://isoeagle.io`;
             </div>
 
             {/* ETF Flow Chart */}
-            <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-1 sm:p-6 rounded-xl sm:rounded-2xl shadow-2xl border border-zinc-700/50 backdrop-blur">
+            <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-0 sm:p-6 rounded-xl sm:rounded-2xl shadow-2xl border border-zinc-700/50 backdrop-blur">
                 <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
@@ -1616,7 +1616,7 @@ https://isoeagle.io`;
                 </div>
 
                 {etfFlows.length > 0 ? (
-                    <div className="w-full -mx-1 sm:mx-0">
+                    <div className="w-full ">
                         {/* Special 1D View - Summary instead of sparse chart */}
                         {timeRange === 'daily' && displayData.length <= 2 ? (
                             <div className="min-h-[280px] sm:h-[380px] flex flex-col justify-center">
@@ -1707,7 +1707,7 @@ https://isoeagle.io`;
                         )}
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
-                                <ComposedChart data={zoomedDisplayData} margin={{ top: 5, right: isMobile ? ((showCumulative || showPriceLine) ? 5 : 2) : ((showCumulative || showPriceLine) ? 60 : 10), left: isMobile ? 0 : 40, bottom: isMobile ? 10 : 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: 5, right: isMobile ? ((showCumulative || showPriceLine) ? 0 : -5) : ((showCumulative || showPriceLine) ? 60 : 10), left: isMobile ? -5 : 40, bottom: isMobile ? 10 : 30 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
@@ -1727,12 +1727,12 @@ https://isoeagle.io`;
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={isMobile ? 0.3 : 0.5} vertical={!isMobile} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(zoomedDisplayData.length)} height={50} />
-                                    <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => isMobile ? (Math.abs(v) >= 1e9 ? (v/1e9).toFixed(0) + "B" : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(0) + "M" : String(Math.round(v))) : `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} width={isMobile ? 15 : 60} tickCount={isMobile ? 5 : undefined} />
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => isMobile ? (Math.abs(v) >= 1e9 ? (v/1e9).toFixed(0) + "B" : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(0) + "M" : String(Math.round(v))) : `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} width={isMobile ? 8 : 60} tickCount={isMobile ? 5 : undefined} />
                                     {showCumulative && (
-                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 15 : 60} />
+                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 8 : 60} />
                                     )}
                                     {showPriceLine && !showCumulative && (
-                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} width={isMobile ? 15 : 60} />
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} width={isMobile ? 8 : 60} />
                                     )}
                                     {showPriceLine && showCumulative && (
                                         <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
@@ -1807,7 +1807,7 @@ https://isoeagle.io`;
                                     )}
                                 </ComposedChart>
                             ) : chartType === 'area' ? (
-                                <AreaChart data={zoomedDisplayData} margin={{ top: 5, right: isMobile ? 0 : 10, left: isMobile ? 0 : 40, bottom: isMobile ? 10 : 30 }}>
+                                <AreaChart data={zoomedDisplayData} margin={{ top: 5, right: isMobile ? -5 : 10, left: isMobile ? -5 : 40, bottom: isMobile ? 10 : 30 }}>
                                     <defs>
                                         <linearGradient id="areaGradientPositive" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={0.6} />
@@ -1820,7 +1820,7 @@ https://isoeagle.io`;
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} />
-                                    <YAxis stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 15 : 60} />
+                                    <YAxis stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Area
@@ -1844,7 +1844,7 @@ https://isoeagle.io`;
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} />
-                                    <YAxis stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 15 : 60} />
+                                    <YAxis stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
                                     <ReferenceLine y={0} stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} strokeDasharray="5 5" />
                                     <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
                                     <Line
@@ -1870,12 +1870,12 @@ https://isoeagle.io`;
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} />
-                                    <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 15 : 60} />
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
                                     {showCumulative && (
-                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 15 : 60} />
+                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 8 : 60} />
                                     )}
                                     {showPriceLine && !showCumulative && (
-                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} width={isMobile ? 15 : 60} />
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} width={isMobile ? 8 : 60} />
                                     )}
                                     {showPriceLine && showCumulative && (
                                         <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
