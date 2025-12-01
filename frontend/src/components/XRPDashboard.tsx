@@ -1707,7 +1707,7 @@ https://isoeagle.io`;
                         )}
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
-                                <ComposedChart data={zoomedDisplayData} margin={{ top: 5, right: (showCumulative || showPriceLine) ? (isMobile ? 40 : 60) : (isMobile ? 5 : 10), left: isMobile ? 0 : 40, bottom: isMobile ? 20 : 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: 5, right: (showCumulative || showPriceLine) ? (isMobile ? 30 : 60) : (isMobile ? 2 : 10), left: isMobile ? 0 : 40, bottom: isMobile ? 15 : 30 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
