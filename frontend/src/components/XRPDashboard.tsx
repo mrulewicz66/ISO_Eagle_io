@@ -541,7 +541,8 @@ export default function XRPDashboard() {
     const [inflow7d, setInflow7d] = useState(0);
     const [outflow7d, setOutflow7d] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [chartType, setChartTypeState] = useState<ChartType>('composed');
+    const [isMobile, setIsMobile] = useState(false);
+    const [chartType, setChartTypeState] = useState<ChartType>(typeof window !== 'undefined' && window.innerWidth < 640 ? 'bar' : 'composed');
     const [showMockData, setShowMockData] = useState(false);
     const [timeRange, setTimeRangeState] = useState<TimeRange>('all');
     const [showCumulative, setShowCumulative] = useState(true);
@@ -996,6 +997,14 @@ export default function XRPDashboard() {
         }
         return null;
     }, [displayData, ethComparisonData]);
+
+    // Detect mobile screen
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 640);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Reset zoom when timeRange changes
     useEffect(() => {
@@ -1607,7 +1616,7 @@ https://isoeagle.io`;
                 </div>
 
                 {etfFlows.length > 0 ? (
-                    <div className="w-full pl-0 sm:pl-4">
+                    <div className="w-full">
                         {/* Special 1D View - Summary instead of sparse chart */}
                         {timeRange === 'daily' && displayData.length <= 2 ? (
                             <div className="min-h-[280px] sm:h-[380px] flex flex-col justify-center">
@@ -1675,7 +1684,7 @@ https://isoeagle.io`;
                         ) : (
                         <div
                             ref={chartContainerRef}
-                            className={`h-[320px] sm:h-[450px] relative ${isZoomed ? 'cursor-grab' : ''} ${isDragging ? 'cursor-grabbing' : ''}`}
+                            className={`h-[380px] sm:h-[450px] relative ${isZoomed ? 'cursor-grab' : ''} ${isDragging ? 'cursor-grabbing' : ''}`}
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUp}
@@ -1698,7 +1707,7 @@ https://isoeagle.io`;
                         )}
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
-                                <ComposedChart data={zoomedDisplayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? 60 : 10, left: 40, bottom: 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? (isMobile ? 45 : 60) : (isMobile ? 5 : 10), left: isMobile ? 5 : 40, bottom: isMobile ? 25 : 30 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
@@ -1716,9 +1725,9 @@ https://isoeagle.io`;
                                             </feMerge>
                                         </filter>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={isMobile ? 0.3 : 0.5} vertical={!isMobile} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(zoomedDisplayData.length)} height={50} />
-                                    <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} />
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 9 : 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} hide={isMobile} width={isMobile ? 0 : 60} />
                                     {showCumulative && (
                                         <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `$${formatFlow(v)}`} tick={{ fontSize: 10, fill: '#60A5FA' }} />
                                     )}
