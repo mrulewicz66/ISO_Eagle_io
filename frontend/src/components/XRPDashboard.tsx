@@ -1983,25 +1983,24 @@ https://isoeagle.io`;
                                 {new Date(latestTradingDayData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
                         </div>
-                            <div>
-                                <span className="text-zinc-500">Daily: </span>
-                                <span className={`font-semibold ${latestTradingDayData.net_flow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    {latestTradingDayData.net_flow >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.net_flow)}
-                                </span>
-                            </div>
-                            <div>
-                                <span className="text-zinc-500">Cumulative: </span>
-                                <span className={`font-semibold ${(latestTradingDayData.cumulative_flow || 0) >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                                    {(latestTradingDayData.cumulative_flow || 0) >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.cumulative_flow || 0)}
-                                </span>
-                            </div>
-                            {latestTradingDayData.price_usd && latestTradingDayData.price_usd > 0 && (
-                                <div>
-                                    <span className="text-zinc-500">XRP: </span>
-                                    <span className="font-semibold text-amber-400">${latestTradingDayData.price_usd.toFixed(4)}</span>
-                                </div>
-                            )}
+                        <div>
+                            <span className="text-zinc-500">Daily: </span>
+                            <span className={`font-semibold ${latestTradingDayData.net_flow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {latestTradingDayData.net_flow >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.net_flow)}
+                            </span>
                         </div>
+                        <div>
+                            <span className="text-zinc-500">Cumulative: </span>
+                            <span className={`font-semibold ${(latestTradingDayData.cumulative_flow || 0) >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                                {(latestTradingDayData.cumulative_flow || 0) >= 0 ? '+' : ''}${formatFlow(latestTradingDayData.cumulative_flow || 0)}
+                            </span>
+                        </div>
+                        {latestTradingDayData.price_usd && latestTradingDayData.price_usd > 0 && (
+                            <div>
+                                <span className="text-zinc-500">XRP: </span>
+                                <span className="font-semibold text-amber-400">${latestTradingDayData.price_usd.toFixed(4)}</span>
+                            </div>
+                        )}
                     </div>
                 )}
 
