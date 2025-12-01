@@ -1493,7 +1493,7 @@ https://isoeagle.io`;
             </div>
 
             {/* ETF Flow Chart */}
-            <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-0 sm:p-6 rounded-xl sm:rounded-2xl shadow-2xl border border-zinc-700/50 backdrop-blur">
+            <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-2xl border border-zinc-700/50 backdrop-blur">
                 <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
@@ -1976,8 +1976,13 @@ https://isoeagle.io`;
 
                 {/* Latest Day Summary - above divider */}
                 {latestTradingDayData && (
-                    <div className="mt-1 sm:mt-4 flex flex-wrap items-center justify-between gap-1 sm:gap-2">
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-sm">
+                    <div className="mt-1 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-sm">
+                        <div>
+                            <span className="text-zinc-500">Last Trading Day: </span>
+                            <span className="font-semibold text-zinc-300">
+                                {new Date(latestTradingDayData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                        </div>
                             <div>
                                 <span className="text-zinc-500">Daily: </span>
                                 <span className={`font-semibold ${latestTradingDayData.net_flow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -1997,9 +2002,6 @@ https://isoeagle.io`;
                                 </div>
                             )}
                         </div>
-                        <h3 className="text-xs sm:text-sm font-medium text-zinc-400">
-                            {latestTradingDayData.displayDate || new Date(latestTradingDayData.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </h3>
                     </div>
                 )}
 
