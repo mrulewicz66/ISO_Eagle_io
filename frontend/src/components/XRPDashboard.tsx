@@ -1707,7 +1707,7 @@ https://isoeagle.io`;
                         )}
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
-                                <ComposedChart data={zoomedDisplayData} margin={{ top: 5, right: isMobile ? ((showCumulative || showPriceLine) ? 0 : -5) : ((showCumulative || showPriceLine) ? 60 : 10), left: isMobile ? -5 : 40, bottom: isMobile ? 10 : 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: isMobile ? 0 : 5, right: isMobile ? -10 : ((showCumulative || showPriceLine) ? 60 : 10), left: isMobile ? -10 : 40, bottom: isMobile ? 5 : 30 }}>
                                     <defs>
                                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
@@ -1726,7 +1726,7 @@ https://isoeagle.io`;
                                         </filter>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={isMobile ? 0.3 : 0.5} vertical={!isMobile} />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(zoomedDisplayData.length)} height={50} />
+                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={CustomXAxisTick} axisLine={{ stroke: '#4B5563' }} interval={getXAxisInterval(zoomedDisplayData.length)} height={isMobile ? 25 : 50} />
                                     <YAxis yAxisId="left" stroke="#9CA3AF" domain={isMobile ? ["auto", (dataMax: number) => dataMax * 1.3] : ["auto", "auto"]} tickFormatter={(v) => isMobile ? (Math.abs(v) >= 1e9 ? (v/1e9).toFixed(0) + "B" : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(0) + "M" : String(Math.round(v))) : `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#4B5563' }} width={isMobile ? 8 : 60} tickCount={isMobile ? 5 : undefined} />
                                     {showCumulative && (
                                         <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 8 : 60} />
@@ -1807,7 +1807,7 @@ https://isoeagle.io`;
                                     )}
                                 </ComposedChart>
                             ) : chartType === 'area' ? (
-                                <AreaChart data={zoomedDisplayData} margin={{ top: 5, right: isMobile ? -5 : 10, left: isMobile ? -5 : 40, bottom: isMobile ? 10 : 30 }}>
+                                <AreaChart data={zoomedDisplayData} margin={{ top: isMobile ? 0 : 5, right: isMobile ? -10 : 10, left: isMobile ? -10 : 40, bottom: isMobile ? 5 : 30 }}>
                                     <defs>
                                         <linearGradient id="areaGradientPositive" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#22C55E" stopOpacity={0.6} />
@@ -1834,7 +1834,7 @@ https://isoeagle.io`;
                                     />
                                 </AreaChart>
                             ) : chartType === 'line' ? (
-                                <LineChart data={zoomedDisplayData} margin={{ top: 5, right: isMobile ? 0 : 10, left: isMobile ? 0 : 40, bottom: isMobile ? 10 : 30 }}>
+                                <LineChart data={zoomedDisplayData} margin={{ top: isMobile ? 0 : 5, right: isMobile ? -10 : 10, left: isMobile ? -10 : 40, bottom: isMobile ? 5 : 30 }}>
                                     <defs>
                                         <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
                                             <stop offset="0%" stopColor="#3B82F6" />
