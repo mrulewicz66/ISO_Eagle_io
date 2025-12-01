@@ -1196,7 +1196,25 @@ export default function XRPDashboard() {
         return tradingDays.length > 0 ? tradingDays[tradingDays.length - 1] : null;
     }, [etfFlows]);
 
-    const latestETFBreakdown = latestTradingDayData?.etf_breakdown?.filter(e => e.flow_usd > 0) || [];
+    // Show ALL ETFs that have appeared in data, even with $0 flow
+    const latestETFBreakdown = useMemo(() => {
+        // Get all unique tickers from all data
+        const allTickers = new Set<string>();
+        etfFlows.forEach(flow => {
+            flow.etf_breakdown?.forEach(etf => allTickers.add(etf.ticker));
+        });
+
+        // Get latest day's data as a map
+        const latestData = new Map(
+            latestTradingDayData?.etf_breakdown?.map(e => [e.ticker, e.flow_usd]) || []
+        );
+
+        // Return all tickers with their flow (or $0 if no data for latest day)
+        return Array.from(allTickers).map(ticker => ({
+            ticker,
+            flow_usd: latestData.get(ticker) || 0
+        }));
+    }, [etfFlows, latestTradingDayData]);
 
     // Filter exchange history by time range and ensure it ends with today
     const filteredExchangeHistory = useMemo(() => {
