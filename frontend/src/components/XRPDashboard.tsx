@@ -2016,7 +2016,7 @@ https://isoeagle.io`;
                                         style={{ backgroundColor: dynamicETFInfo[etf.ticker]?.color || '#6B7280' }}
                                     />
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center justify-between gap-0.5">
+                                        <div className="flex items-center gap-1">
                                             <span className="text-[9px] sm:text-xs font-bold text-white">{etf.ticker}</span>
                                             <span className={`text-[9px] sm:text-xs font-semibold ${etf.flow_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>{etf.flow_usd >= 0 ? '+' : ''}${formatFlow(etf.flow_usd)}</span>
                                         </div>
