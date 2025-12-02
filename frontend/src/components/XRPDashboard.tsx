@@ -2324,13 +2324,13 @@ https://isoeagle.io`;
 
             {/* Waitlist CTA Section */}
             <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 p-4 sm:p-6 rounded-xl shadow-xl border border-purple-700/50">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex-1">
+                <div className="flex flex-col items-center text-center gap-4">
+                    <div>
                         <h3 className="text-lg sm:text-xl font-bold text-white mb-1">Get Premium Features Early</h3>
-                        <p className="text-sm text-purple-200 mb-2">
+                        <p className="text-sm text-purple-200 mb-3">
                             Join the waitlist for upcoming premium features:
                         </p>
-                        <ul className="text-xs sm:text-sm text-purple-300 space-y-0.5">
+                        <ul className="text-xs sm:text-sm text-purple-300 space-y-0.5 inline-block text-left">
                             <li className="flex items-center gap-2">
                                 <span className="text-green-400">✓</span> Daily ETF flow alerts via email
                             </li>
@@ -2342,8 +2342,8 @@ https://isoeagle.io`;
                             </li>
                         </ul>
                     </div>
-                    <div className="flex-shrink-0 w-full sm:w-auto">
-                        <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-2">
+                    <div className="w-full sm:w-auto">
+                        <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-2 justify-center">
                             <input
                                 type="email"
                                 value={waitlistEmail}
@@ -2361,7 +2361,7 @@ https://isoeagle.io`;
                             </button>
                         </form>
                         {waitlistMessage && (
-                            <p className={`mt-2 text-sm ${waitlistMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                            <p className={`mt-2 text-sm text-center ${waitlistMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
                                 {waitlistMessage.text}
                             </p>
                         )}
