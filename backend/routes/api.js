@@ -4,6 +4,7 @@ const db = require('../db/database');
 const CoinGlassService = require('../services/coinGlassService');
 const SoSoValueService = require('../services/sosoValueService');
 const CoinGeckoService = require('../services/coinGeckoService');
+const emailService = require('../services/emailService');
 
 // Initialize services
 const coinGlass = new CoinGlassService(process.env.COINGLASS_API_KEY);
@@ -472,9 +473,14 @@ router.post('/waitlist', async (req, res) => {
 
         console.log(`Waitlist signup: ${normalizedEmail} (new)`);
 
+        // Send confirmation email (don't wait for it, don't fail if it fails)
+        emailService.sendWaitlistConfirmation(normalizedEmail).catch(err => {
+            console.error('Failed to send waitlist confirmation:', err);
+        });
+
         res.json({
             success: true,
-            message: 'Successfully joined the waitlist!',
+            message: 'Successfully joined the waitlist! Check your email for confirmation.',
             isNew: true
         });
     } catch (error) {
