@@ -572,6 +572,7 @@ export default function XRPDashboard() {
     const chartContainerRef = useCallback((node: HTMLDivElement | null) => {
         setChartContainer(node);
     }, []);
+    const [chartMounted, setChartMounted] = useState(false);
 
     // URL param helpers - update URL when chart state changes
     const updateURL = useCallback((chart: ChartType, range: TimeRange) => {
@@ -610,6 +611,12 @@ export default function XRPDashboard() {
         if (rangeParam && ['daily', 'weekly', 'monthly', 'yearly', 'all'].includes(rangeParam)) {
             setTimeRangeState(rangeParam);
         }
+    }, []);
+
+    // Delay chart render to avoid dimension warnings
+    useEffect(() => {
+        const timer = setTimeout(() => setChartMounted(true), 50);
+        return () => clearTimeout(timer);
     }, []);
 
     // Keyboard shortcuts
@@ -1742,7 +1749,7 @@ https://isoeagle.io`;
                             </div>
                         )}
                         <div className={isMobile ? "w-full h-full scale-x-[1.12] scale-y-[1.05] origin-center" : "w-full h-full"}>
-                        <ResponsiveContainer width="100%" height="100%" debounce={1}>
+                        {chartMounted && <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
                                 <ComposedChart data={zoomedDisplayData} margin={{ top: isMobile ? 2 : 5, right: isMobile ? ((showCumulative || showPriceLine) ? 24 : 4) : ((showCumulative || showPriceLine) ? 60 : 10), left: isMobile ? 16 : 40, bottom: isMobile ? 12 : 30 }}>
                                     <defs>
@@ -1994,7 +2001,7 @@ https://isoeagle.io`;
                                     )}
                                 </ComposedChart>
                             ) : null}
-                        </ResponsiveContainer>
+                        </ResponsiveContainer>}
                         </div>
                         </div>
                         )}
@@ -2186,7 +2193,7 @@ https://isoeagle.io`;
                                 </div>
                             </div>
                             <div className="h-[280px] sm:h-[350px]">
-                                <ResponsiveContainer width="100%" height="100%" debounce={1}>
+                                {chartMounted && <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={filteredExchangeHistory} margin={{ top: 10, right: 10, left: 0, bottom: 30 }}>
                                         <defs>
                                             <linearGradient id="reserveGradient" x1="0" y1="0" x2="0" y2="1">
@@ -2243,7 +2250,7 @@ https://isoeagle.io`;
                                             dot={false}
                                         />
                                     </AreaChart>
-                                </ResponsiveContainer>
+                                </ResponsiveContainer>}
                             </div>
                             <div className="mt-3 p-2 sm:p-3 bg-zinc-800/50 rounded-lg space-y-1">
                                 <p className="text-[10px] sm:text-xs text-zinc-400">
