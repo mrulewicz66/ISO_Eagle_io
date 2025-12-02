@@ -1853,34 +1853,50 @@ https://isoeagle.io`;
                                     )}
                                 </ComposedChart>
                             ) : chartType === 'area' ? (
-                                <AreaChart data={zoomedDisplayData} margin={{ top: isMobile ? 0 : 5, right: isMobile ? -10 : 10, left: isMobile ? -10 : 40, bottom: isMobile ? 5 : 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: isMobile ? 0 : 5, right: (showCumulative || showPriceLine) ? 60 : (isMobile ? -10 : 10), left: isMobile ? -10 : 40, bottom: isMobile ? 5 : 30 }}>
                                     <defs>
                                         <linearGradient id="areaGradientPositive" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#22C55E" stopOpacity={0.6} />
-                                            <stop offset="100%" stopColor="#22C55E" stopOpacity={0.05} />
-                                        </linearGradient>
-                                        <linearGradient id="areaGradientNegative" x1="0" y1="1" x2="0" y2="0">
-                                            <stop offset="0%" stopColor="#EF4444" stopOpacity={0.6} />
-                                            <stop offset="100%" stopColor="#EF4444" stopOpacity={0.05} />
+                                            <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.6} />
+                                            <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.05} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} />
-                                    <YAxis stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
-                                    <ReferenceLine y={0} stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" domain={["auto", (dataMax: number) => dataMax * 1.3]} tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
+                                    {showCumulative && (
+                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 8 : 60} />
+                                    )}
+                                    {showPriceLine && !showCumulative && (
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} width={isMobile ? 8 : 60} />
+                                    )}
+                                    {showPriceLine && showCumulative && (
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
+                                    )}
+                                    <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} showBTCComparison={showBTCComparison} showETHComparison={showETHComparison} />} />
                                     <Area
                                         type="monotone"
                                         dataKey="net_flow"
                                         stroke="#8B5CF6"
                                         strokeWidth={isMobile ? 0.5 : 3}
                                         fill="url(#areaGradientPositive)"
-                                        dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
-                                        activeDot={{ r: 6, fill: '#A78BFA', stroke: '#fff', strokeWidth: 2 }}
+                                        yAxisId="left"
                                     />
-                                </AreaChart>
+                                    {showCumulative && (
+                                        <Line type="monotone" dataKey="cumulative_flow" stroke="#60A5FA" strokeWidth={isMobile ? 0.5 : 3} strokeDasharray="5 5" dot={false} yAxisId="cumulative" name="Cumulative" />
+                                    )}
+                                    {showPriceLine && (
+                                        <Line type="monotone" dataKey="price_usd" stroke="#F59E0B" strokeWidth={isMobile ? 0.3 : 2} dot={false} yAxisId="price" name="XRP Price" connectNulls />
+                                    )}
+                                    {showBTCComparison && showCumulative && (
+                                        <Line type="monotone" dataKey="btc_cumulative_flow" stroke="#F97316" strokeWidth={isMobile ? 0.3 : 2} strokeDasharray="3 3" dot={false} yAxisId="cumulative" name="BTC ETF" connectNulls />
+                                    )}
+                                    {showETHComparison && showCumulative && (
+                                        <Line type="monotone" dataKey="eth_cumulative_flow" stroke="#8B5CF6" strokeWidth={isMobile ? 0.3 : 2} strokeDasharray="3 3" dot={false} yAxisId="cumulative" name="ETH ETF" connectNulls />
+                                    )}
+                                </ComposedChart>
                             ) : chartType === 'line' ? (
-                                <LineChart data={zoomedDisplayData} margin={{ top: isMobile ? 0 : 5, right: isMobile ? -10 : 10, left: isMobile ? -10 : 40, bottom: isMobile ? 5 : 30 }}>
+                                <ComposedChart data={zoomedDisplayData} margin={{ top: isMobile ? 0 : 5, right: (showCumulative || showPriceLine) ? 60 : (isMobile ? -10 : 10), left: isMobile ? -10 : 40, bottom: isMobile ? 5 : 30 }}>
                                     <defs>
                                         <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
                                             <stop offset="0%" stopColor="#3B82F6" />
@@ -1890,9 +1906,18 @@ https://isoeagle.io`;
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} />
-                                    <YAxis stroke="#9CA3AF" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
-                                    <ReferenceLine y={0} stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} strokeDasharray="5 5" />
-                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} />} />
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" domain={["auto", (dataMax: number) => dataMax * 1.3]} tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
+                                    {showCumulative && (
+                                        <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 8 : 60} />
+                                    )}
+                                    {showPriceLine && !showCumulative && (
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} width={isMobile ? 8 : 60} />
+                                    )}
+                                    {showPriceLine && showCumulative && (
+                                        <YAxis yAxisId="price" orientation="right" stroke="#F59E0B" tickFormatter={(v) => `$${v.toFixed(2)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#F59E0B' }} domain={['auto', 'auto']} hide />
+                                    )}
+                                    <ReferenceLine y={0} yAxisId="left" stroke="#6B7280" strokeWidth={isMobile ? 0.3 : 2} strokeDasharray="5 5" />
+                                    <Tooltip content={<CustomTooltip formatFlow={formatFlow} etfInfo={dynamicETFInfo} showCumulative={showCumulative} showBTCComparison={showBTCComparison} showETHComparison={showETHComparison} />} />
                                     <Line
                                         type="monotone"
                                         dataKey="net_flow"
@@ -1900,8 +1925,21 @@ https://isoeagle.io`;
                                         strokeWidth={4}
                                         dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 5, stroke: '#1F2937' }}
                                         activeDot={{ r: 8, fill: '#A78BFA', stroke: '#fff', strokeWidth: 3 }}
+                                        yAxisId="left"
                                     />
-                                </LineChart>
+                                    {showCumulative && (
+                                        <Line type="monotone" dataKey="cumulative_flow" stroke="#60A5FA" strokeWidth={isMobile ? 0.5 : 3} strokeDasharray="5 5" dot={false} yAxisId="cumulative" name="Cumulative" />
+                                    )}
+                                    {showPriceLine && (
+                                        <Line type="monotone" dataKey="price_usd" stroke="#F59E0B" strokeWidth={isMobile ? 0.3 : 2} dot={false} yAxisId="price" name="XRP Price" connectNulls />
+                                    )}
+                                    {showBTCComparison && showCumulative && (
+                                        <Line type="monotone" dataKey="btc_cumulative_flow" stroke="#F97316" strokeWidth={isMobile ? 0.3 : 2} strokeDasharray="3 3" dot={false} yAxisId="cumulative" name="BTC ETF" connectNulls />
+                                    )}
+                                    {showETHComparison && showCumulative && (
+                                        <Line type="monotone" dataKey="eth_cumulative_flow" stroke="#8B5CF6" strokeWidth={isMobile ? 0.3 : 2} strokeDasharray="3 3" dot={false} yAxisId="cumulative" name="ETH ETF" connectNulls />
+                                    )}
+                                </ComposedChart>
                             ) : chartType === 'composed' ? (
                                 <ComposedChart data={zoomedDisplayData} margin={{ top: 10, right: (showCumulative || showPriceLine) ? 60 : 10, left: 40, bottom: 30 }}>
                                     <defs>
