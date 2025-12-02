@@ -6,6 +6,7 @@ class EmailService {
             ? new Resend(process.env.RESEND_API_KEY)
             : null;
         this.fromEmail = process.env.FROM_EMAIL || 'XRP Tracker <noreply@isoeagle.io>';
+        this.adminEmail = 'mrulewicz66@gmail.com';
     }
 
     async sendWaitlistConfirmation(email) {
@@ -31,6 +32,40 @@ class EmailService {
             return { success: true, id: data.id };
         } catch (error) {
             console.error('Email send error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async sendAdminSignupNotification(newEmail, totalSignups) {
+        if (!this.resend) {
+            console.log('Email service not configured - skipping admin notification');
+            return { success: false, error: 'Email service not configured' };
+        }
+
+        try {
+            const { data, error } = await this.resend.emails.send({
+                from: this.fromEmail,
+                to: this.adminEmail,
+                subject: `New Waitlist Signup (#${totalSignups})`,
+                html: `
+                    <div style="font-family: sans-serif; padding: 20px;">
+                        <h2 style="color: #7c3aed;">New Waitlist Signup</h2>
+                        <p><strong>Email:</strong> ${newEmail}</p>
+                        <p><strong>Total signups:</strong> ${totalSignups}</p>
+                        <p style="color: #666; font-size: 14px;">Time: ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} ET</p>
+                    </div>
+                `
+            });
+
+            if (error) {
+                console.error('Failed to send admin notification:', error);
+                return { success: false, error: error.message };
+            }
+
+            console.log(`Admin notification sent, id: ${data.id}`);
+            return { success: true, id: data.id };
+        } catch (error) {
+            console.error('Admin notification error:', error);
             return { success: false, error: error.message };
         }
     }

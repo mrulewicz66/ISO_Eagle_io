@@ -471,11 +471,20 @@ router.post('/waitlist', async (req, res) => {
             [normalizedEmail, ipAddress, userAgent, 'dashboard']
         );
 
-        console.log(`Waitlist signup: ${normalizedEmail} (new)`);
+        // Get total count for admin notification
+        const countResult = await db.query('SELECT COUNT(*) as count FROM waitlist');
+        const totalSignups = parseInt(countResult.rows[0].count, 10);
+
+        console.log(`Waitlist signup: ${normalizedEmail} (new, total: ${totalSignups})`);
 
         // Send confirmation email (don't wait for it, don't fail if it fails)
         emailService.sendWaitlistConfirmation(normalizedEmail).catch(err => {
             console.error('Failed to send waitlist confirmation:', err);
+        });
+
+        // Send admin notification
+        emailService.sendAdminSignupNotification(normalizedEmail, totalSignups).catch(err => {
+            console.error('Failed to send admin notification:', err);
         });
 
         res.json({
