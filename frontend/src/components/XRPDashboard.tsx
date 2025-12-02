@@ -547,6 +547,11 @@ export default function XRPDashboard() {
     const [timeRange, setTimeRangeState] = useState<TimeRange>('all');
     const [showCumulative, setShowCumulative] = useState(true);
     const [showPriceLine, setShowPriceLine] = useState(false);
+
+    // Waitlist state
+    const [waitlistEmail, setWaitlistEmail] = useState('');
+    const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+    const [waitlistMessage, setWaitlistMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [showBTCComparison, setShowBTCComparison] = useState(false);
     const [showETHComparison, setShowETHComparison] = useState(false);
     const [btcComparisonData, setBtcComparisonData] = useState<{ day: number; net_flow: number; cumulative_flow: number }[] | null>(null);
@@ -1318,6 +1323,36 @@ https://isoeagle.io`;
             document.body.removeChild(textArea);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
+    // Waitlist submit handler
+    const handleWaitlistSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!waitlistEmail || waitlistSubmitting) return;
+
+        setWaitlistSubmitting(true);
+        setWaitlistMessage(null);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/waitlist`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: waitlistEmail })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setWaitlistMessage({ type: 'success', text: data.message });
+                setWaitlistEmail('');
+            } else {
+                setWaitlistMessage({ type: 'error', text: data.error || 'Failed to join waitlist' });
+            }
+        } catch {
+            setWaitlistMessage({ type: 'error', text: 'Network error. Please try again.' });
+        } finally {
+            setWaitlistSubmitting(false);
         }
     };
 
@@ -2286,6 +2321,53 @@ https://isoeagle.io`;
                     </div>
                 </div>
             )}
+
+            {/* Waitlist CTA Section */}
+            <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 p-4 sm:p-6 rounded-xl shadow-xl border border-purple-700/50">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex-1">
+                        <h3 className="text-lg sm:text-xl font-bold text-white mb-1">Get Premium Features Early</h3>
+                        <p className="text-sm text-purple-200 mb-2">
+                            Join the waitlist for upcoming premium features:
+                        </p>
+                        <ul className="text-xs sm:text-sm text-purple-300 space-y-0.5">
+                            <li className="flex items-center gap-2">
+                                <span className="text-green-400">✓</span> Daily ETF flow alerts via email
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="text-green-400">✓</span> Real-time 24h exchange reserve tracking
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="text-green-400">✓</span> Custom notification thresholds
+                            </li>
+                        </ul>
+                    </div>
+                    <div className="flex-shrink-0 w-full sm:w-auto">
+                        <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-2">
+                            <input
+                                type="email"
+                                value={waitlistEmail}
+                                onChange={(e) => setWaitlistEmail(e.target.value)}
+                                placeholder="Enter your email"
+                                className="px-4 py-2.5 rounded-lg bg-white/10 border border-purple-500/50 text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 text-sm w-full sm:w-64"
+                                disabled={waitlistSubmitting}
+                            />
+                            <button
+                                type="submit"
+                                disabled={waitlistSubmitting || !waitlistEmail}
+                                className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 text-sm whitespace-nowrap"
+                            >
+                                {waitlistSubmitting ? 'Joining...' : 'Join Waitlist'}
+                            </button>
+                        </form>
+                        {waitlistMessage && (
+                            <p className={`mt-2 text-sm ${waitlistMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                                {waitlistMessage.text}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
 
         </div>
     );

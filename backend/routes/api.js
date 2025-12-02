@@ -427,4 +427,63 @@ router.get('/debug/etf-sources', async (req, res) => {
     }
 });
 
+// ============================================
+// WAITLIST ENDPOINTS
+// ============================================
+
+// Join waitlist - POST /api/waitlist
+router.post('/waitlist', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Validate email
+        if (!email || !email.includes('@') || !email.includes('.')) {
+            return res.status(400).json({ error: 'Valid email required' });
+        }
+
+        // Normalize email
+        const normalizedEmail = email.toLowerCase().trim();
+
+        // Get IP and user agent for analytics
+        const ipAddress = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || null;
+        const userAgent = req.headers['user-agent'] || null;
+
+        // Insert into database (UNIQUE constraint handles duplicates)
+        const result = await db.query(
+            `INSERT INTO waitlist (email, ip_address, user_agent, source)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (email) DO UPDATE SET
+                 created_at = waitlist.created_at  -- Keep original signup date
+             RETURNING id, email, created_at`,
+            [normalizedEmail, ipAddress, userAgent, 'dashboard']
+        );
+
+        const isNew = result.rowCount === 1 && result.rows[0].created_at;
+
+        console.log(`Waitlist signup: ${normalizedEmail} (${isNew ? 'new' : 'existing'})`);
+
+        res.json({
+            success: true,
+            message: isNew ? 'Successfully joined the waitlist!' : 'You\'re already on the waitlist!',
+            isNew
+        });
+    } catch (error) {
+        console.error('Error adding to waitlist:', error);
+        res.status(500).json({ error: 'Failed to join waitlist. Please try again.' });
+    }
+});
+
+// Get waitlist count (for social proof) - GET /api/waitlist/count
+router.get('/waitlist/count', async (req, res) => {
+    try {
+        const result = await db.query('SELECT COUNT(*) as count FROM waitlist');
+        const count = parseInt(result.rows[0].count, 10);
+
+        res.json({ count });
+    } catch (error) {
+        console.error('Error getting waitlist count:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
