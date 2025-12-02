@@ -2112,12 +2112,12 @@ https://isoeagle.io`;
                     {/* Cumulative Totals Comparison */}
                     {showCumulative && (showBTCComparison || showETHComparison) && (
                         <div className="mt-3 pt-3 border-t border-zinc-700/50">
-                            <p className="text-[10px] sm:text-xs text-zinc-400 mb-2">Cumulative totals at same # of trading days ({displayData.length} days):</p>
+                            <p className="text-[10px] sm:text-xs text-zinc-400 mb-2">Flows at day {displayData.length} from each ETF&apos;s launch:</p>
                             <div className="flex flex-wrap gap-3 sm:gap-6 text-xs sm:text-sm">
                                 {showBTCComparison && sameDayBTCCumulative !== null && (
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                                        <span className="text-zinc-400">BTC ETF:</span>
+                                        <span className="text-zinc-400">BTC ETF (Jan 2024):</span>
                                         <span className={`font-semibold ${sameDayBTCCumulative >= 0 ? 'text-orange-400' : 'text-red-400'}`}>
                                             {sameDayBTCCumulative >= 0 ? '+' : ''}${formatFlow(sameDayBTCCumulative)}
                                         </span>
@@ -2126,7 +2126,7 @@ https://isoeagle.io`;
                                 {showETHComparison && sameDayETHCumulative !== null && (
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                                        <span className="text-zinc-400">ETH ETF:</span>
+                                        <span className="text-zinc-400">ETH ETF (Jul 2024):</span>
                                         <span className={`font-semibold ${sameDayETHCumulative >= 0 ? 'text-purple-400' : 'text-red-400'}`}>
                                             {sameDayETHCumulative >= 0 ? '+' : ''}${formatFlow(sameDayETHCumulative)}
                                         </span>
