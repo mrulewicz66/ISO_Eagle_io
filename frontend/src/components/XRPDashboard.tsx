@@ -1289,7 +1289,6 @@ export default function XRPDashboard() {
 ${priceEmoji} Price: $${price} (${parseFloat(priceChange) >= 0 ? '+' : ''}${priceChange}%)
 
 Track XRP institutional flows live 👇
-https://isoeagle.io
 
 #XRPETF #Crypto #Ripple`;
 
@@ -1298,7 +1297,8 @@ https://isoeagle.io
 
     const handleTwitterShare = () => {
         const shareText = generateShareText();
-        window.open(`https://twitter.com/intent/tweet?text=${shareText}`, '_blank', 'width=550,height=420');
+        const shareUrl = encodeURIComponent('https://isoeagle.io');
+        window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, '_blank', 'width=550,height=420');
     };
 
     const handleCopyShare = async () => {
