@@ -2105,10 +2105,10 @@ https://isoeagle.io`;
                         <div className="sm:text-right">
                             <div className="text-lg sm:text-2xl font-bold text-white">{formatXRP(exchangeData.totals.balance)} XRP</div>
                             <div className={`text-xs sm:text-sm ${exchangeData.totals.change_30d < 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {exchangeData.totals.change_30d < 0 ? '' : '+'}{formatXRP(exchangeData.totals.change_30d)} (30d)
+                                {exchangeData.totals.change_30d < 0 ? '-' : '+'}{(Math.abs(exchangeData.totals.change_30d) / 1_000_000).toLocaleString('en-US', { maximumFractionDigits: 1, minimumFractionDigits: 1 })}M (30d)
                             </div>
                             <div className={`text-xs sm:text-sm ${exchangeData.totals.change_7d < 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {exchangeData.totals.change_7d < 0 ? '' : '+'}{formatXRP(exchangeData.totals.change_7d)} (7d)
+                                {exchangeData.totals.change_7d < 0 ? '-' : '+'}{(Math.abs(exchangeData.totals.change_7d) / 1_000_000).toLocaleString('en-US', { maximumFractionDigits: 1, minimumFractionDigits: 1 })}M (7d)
                             </div>
                         </div>
                     </div>
