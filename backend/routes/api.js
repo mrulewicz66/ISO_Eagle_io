@@ -448,24 +448,34 @@ router.post('/waitlist', async (req, res) => {
         const ipAddress = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || null;
         const userAgent = req.headers['user-agent'] || null;
 
-        // Insert into database (UNIQUE constraint handles duplicates)
-        const result = await db.query(
+        // Check if email already exists
+        const existingCheck = await db.query(
+            'SELECT id FROM waitlist WHERE email = $1',
+            [normalizedEmail]
+        );
+
+        if (existingCheck.rows.length > 0) {
+            console.log(`Waitlist signup: ${normalizedEmail} (already exists)`);
+            return res.json({
+                success: true,
+                message: "You're already on the waitlist!",
+                isNew: false
+            });
+        }
+
+        // Insert new email
+        await db.query(
             `INSERT INTO waitlist (email, ip_address, user_agent, source)
-             VALUES ($1, $2, $3, $4)
-             ON CONFLICT (email) DO UPDATE SET
-                 created_at = waitlist.created_at  -- Keep original signup date
-             RETURNING id, email, created_at`,
+             VALUES ($1, $2, $3, $4)`,
             [normalizedEmail, ipAddress, userAgent, 'dashboard']
         );
 
-        const isNew = result.rowCount === 1 && result.rows[0].created_at;
-
-        console.log(`Waitlist signup: ${normalizedEmail} (${isNew ? 'new' : 'existing'})`);
+        console.log(`Waitlist signup: ${normalizedEmail} (new)`);
 
         res.json({
             success: true,
-            message: isNew ? 'Successfully joined the waitlist!' : 'You\'re already on the waitlist!',
-            isNew
+            message: 'Successfully joined the waitlist!',
+            isNew: true
         });
     } catch (error) {
         console.error('Error adding to waitlist:', error);
