@@ -1773,7 +1773,7 @@ https://isoeagle.io`;
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={isMobile ? 0.3 : 0.5} vertical={!isMobile} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={isMobile ? false : CustomXAxisTick} axisLine={{ stroke: "#4B5563" }} interval={getXAxisInterval(zoomedDisplayData.length)} height={isMobile ? 1 : 50} hide={isMobile} />
-                                    <YAxis yAxisId="left" stroke="#9CA3AF" domain={isMobile ? ["auto", (dataMax: number) => dataMax * 1.3] : ["auto", "auto"]} tickFormatter={(v) => isMobile ? (Math.abs(v) >= 1e9 ? (v/1e9).toFixed(0) + "B" : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(0) + "M" : String(Math.round(v))) : `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: "#9CA3AF" }} axisLine={{ stroke: "#4B5563" }} width={isMobile ? 1 : 60} tickCount={isMobile ? 5 : undefined} hide={isMobile} />
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" domain={["auto", (dataMax: number) => dataMax * 1.3]} tickFormatter={(v) => isMobile ? (Math.abs(v) >= 1e9 ? (v/1e9).toFixed(0) + "B" : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(0) + "M" : String(Math.round(v))) : `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: "#9CA3AF" }} axisLine={{ stroke: "#4B5563" }} width={isMobile ? 1 : 60} tickCount={isMobile ? 5 : undefined} hide={isMobile} />
                                     {showCumulative && (
                                         <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: "#60A5FA" }} width={isMobile ? 1 : 60} hide={isMobile} />
                                     )}
@@ -1916,7 +1916,7 @@ https://isoeagle.io`;
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
                                     <XAxis dataKey="displayDate" stroke="#9CA3AF" tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} />
-                                    <YAxis yAxisId="left" stroke="#9CA3AF" domain={isMobile ? ["auto", (dataMax: number) => dataMax * 1.3] : ["auto", "auto"]} tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
+                                    <YAxis yAxisId="left" stroke="#9CA3AF" domain={["auto", (dataMax: number) => dataMax * 1.3]} tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 11, fill: '#9CA3AF' }} width={isMobile ? 8 : 60} />
                                     {showCumulative && (
                                         <YAxis yAxisId="cumulative" orientation="right" stroke="#60A5FA" tickFormatter={(v) => `${formatFlow(v)}`} tick={{ fontSize: isMobile ? 7 : 10, fill: '#60A5FA' }} width={isMobile ? 8 : 60} />
                                     )}
