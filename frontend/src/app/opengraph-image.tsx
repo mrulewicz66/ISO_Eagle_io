@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
+// v2 - Dec 2024
 export const alt = 'ISO Eagle - XRP ETF Monitor';
 export const size = {
     width: 1200,
