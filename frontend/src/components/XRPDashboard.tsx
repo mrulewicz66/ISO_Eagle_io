@@ -624,6 +624,8 @@ export default function XRPDashboard() {
         const handleKeyDown = (e: KeyboardEvent) => {
             // Don't trigger if typing in an input
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+            // Don't trigger if modifier keys are pressed (allow Ctrl+C, Cmd+C, etc.)
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
 
             const key = e.key.toLowerCase();
 
