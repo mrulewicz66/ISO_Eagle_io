@@ -1282,9 +1282,6 @@ export default function XRPDashboard() {
         const priceChange = priceData?.price_change_24h?.toFixed(2) || '0';
         const priceEmoji = parseFloat(priceChange) >= 0 ? '📈' : '📉';
 
-        // Cache buster to force Twitter to refresh OG image
-        const cacheBuster = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-
         const text = `🚀 #XRP ETF Update
 
 💰 Latest: ${latestFlow >= 0 ? '+' : '-'}$${flowAmount} ${flowDirection}
@@ -1292,7 +1289,7 @@ export default function XRPDashboard() {
 ${priceEmoji} Price: $${price} (${parseFloat(priceChange) >= 0 ? '+' : ''}${priceChange}%)
 
 Track XRP institutional flows live 👇
-https://isoeagle.io?v=${cacheBuster}
+https://isoeagle.io
 
 #XRPETF #Crypto #Ripple`;
 
