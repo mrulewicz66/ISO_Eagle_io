@@ -10,6 +10,15 @@ interface Update {
 
 const updates: Update[] = [
     {
+        date: '2025-12-01',
+        changes: [
+            'Added premium waitlist signup with email confirmation',
+            'Redesigned waitlist panel with centered layout',
+            'Fixed keyboard shortcuts conflicting with Ctrl+C copy',
+            'Fixed chart dimension warnings on page load',
+        ]
+    },
+    {
         date: '2025-11-30',
         changes: [
             'Added ETH ETF comparison - compare XRP ETF cumulative flows vs ETH ETF from launch day (purple line)',
