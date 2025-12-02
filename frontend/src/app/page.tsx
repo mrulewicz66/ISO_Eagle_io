@@ -89,6 +89,17 @@ export default function Home() {
                     <p className="text-[10px] sm:text-xs text-zinc-300 mt-1 sm:mt-2">
                         XRP ETF data is for informational purposes only.
                     </p>
+                    <div className="mt-3 pt-3 border-t border-zinc-800">
+                        <p className="text-zinc-500 text-xs sm:text-sm">Have a feature request?</p>
+                        <a
+                            href="https://x.com/rulewicz66"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 transition-colors text-xs sm:text-sm"
+                        >
+                            Let us know on X
+                        </a>
+                    </div>
                 </div>
             </footer>
         </div>
