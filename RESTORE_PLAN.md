@@ -251,34 +251,89 @@ pm2 startup systemd -u root --hp /root
 
 ---
 
-## Phase 8: SSL Certificate (Let's Encrypt)
+## Phase 8: Cloudflare Setup (BEFORE SSL)
 
-### 8.1 Install Certbot
+### 8.1 Add Domain to Cloudflare
+1. Create Cloudflare account at https://cloudflare.com
+2. Add site: `isoeagle.io`
+3. Cloudflare will scan DNS records
+
+### 8.2 Update Nameservers at Domain Registrar
+- Change nameservers to Cloudflare's (provided during setup)
+- Wait for propagation (can take up to 24 hours, usually faster)
+
+### 8.3 Cloudflare DNS Settings
+Add these records (use your VPS IP):
+```
+Type  | Name | Content      | Proxy
+A     | @    | YOUR_VPS_IP  | Proxied (orange cloud)
+A     | www  | YOUR_VPS_IP  | Proxied (orange cloud)
+```
+
+### 8.4 Cloudflare Security Settings
+- **SSL/TLS**: Set to "Full (strict)" after Let's Encrypt setup
+- **Security Level**: Medium or High
+- **Bot Fight Mode**: ON
+- **Under Attack Mode**: Available if needed (shows captcha)
+
+### 8.5 Cloudflare Firewall Rules (Optional)
+Block known malicious IPs:
+- `38.181.20.122` (Hong Kong C2)
+- `103.135.101.15` (Hong Kong C2)
+
+---
+
+## Phase 9: SSL Certificate (Let's Encrypt)
+
+### 9.1 Install Certbot
 ```bash
 apt install -y certbot python3-certbot-nginx
 ```
 
-### 8.2 Obtain Certificate
+### 9.2 Obtain Certificate
 ```bash
 certbot --nginx -d isoeagle.io -d www.isoeagle.io
 ```
 
-### 8.3 Auto-Renewal (already configured by certbot)
+### 9.3 Auto-Renewal (already configured by certbot)
 ```bash
 certbot renew --dry-run  # Test renewal
 ```
 
 ---
 
-## Phase 9: Final Security Checks
+## Phase 10: Monarx Malware Scanner (Hostinger Recommended)
 
-### 9.1 Verify Firewall
+### 10.1 Install Monarx
+Hostinger may pre-install this, but if not:
+```bash
+# Check if already installed
+which monarx-agent
+
+# If not installed, Hostinger provides installation via hPanel
+# Or contact Hostinger support for installation instructions
+```
+
+### 10.2 Verify Monarx is Running
+```bash
+systemctl status monarx-protect
+ps aux | grep monarx
+```
+
+**Note**: Monarx was running on the compromised server but didn't detect the "kickd" botnet.
+It's a good additional layer but don't rely on it exclusively.
+
+---
+
+## Phase 11: Final Security Checks
+
+### 11.1 Verify Firewall
 ```bash
 ufw status verbose
 # Should show: 22, 80, 443 only
 ```
 
-### 9.2 Verify Ports NOT Exposed
+### 11.2 Verify Ports NOT Exposed
 ```bash
 # From outside the server, these should NOT be accessible:
 # - Port 3000 (Next.js)
@@ -286,7 +341,7 @@ ufw status verbose
 # - Port 5433 (PostgreSQL)
 ```
 
-### 9.3 Block Known Malicious IPs (from previous incident)
+### 11.3 Block Known Malicious IPs (from previous incident)
 ```bash
 iptables -A OUTPUT -d 38.181.20.122 -j DROP
 iptables -A OUTPUT -d 103.135.101.15 -j DROP
@@ -294,7 +349,7 @@ apt install -y iptables-persistent
 netfilter-persistent save
 ```
 
-### 9.4 Verify Services
+### 11.4 Verify Services
 ```bash
 pm2 status
 curl -s http://localhost:3000 | head -c 100
