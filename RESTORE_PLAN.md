@@ -109,7 +109,7 @@ cd /var/www
 
 ### 3.2 Clone Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/cointracker.git
+git clone https://github.com/mrulewicz66/ISO_Eagle_io.git cointracker
 cd cointracker
 ```
 
