@@ -2,6 +2,7 @@ const CoinGeckoService = require('./coinGeckoService');
 const CoinGlassService = require('./coinGlassService');
 const CryptoQuantService = require('./cryptoQuantService');
 const SoSoValueService = require('./sosoValueService');
+const SoSoValueScraper = require('./sosoValueScraper');
 const db = require('../db/database');
 
 class DataAggregator {
@@ -10,6 +11,7 @@ class DataAggregator {
         this.coinGlass = new CoinGlassService(process.env.COINGLASS_API_KEY);
         this.cryptoQuant = new CryptoQuantService(process.env.CRYPTOQUANT_API_KEY);
         this.sosoValue = new SoSoValueService(process.env.SOSOVALUE_API_KEY);
+        this.sosoValueScraper = new SoSoValueScraper();
 
         // Log API status on startup
         this.logAPIStatus();
@@ -90,18 +92,27 @@ class DataAggregator {
                 console.log('Fetching XRP data from CoinGlass...');
 
                 // Try XRP ETF Flows (requires paid plan + API endpoint to be live)
+                let coinGlassLatestDate = null;
                 try {
                     const xrpETFFlows = await this.coinGlass.getXRPETFFlows();
                     if (xrpETFFlows && xrpETFFlows.length > 0) {
                         await this.storeETFFlowsCoinGlass(xrpETFFlows, 'XRP');
                         results.fetched.push('XRPETFFlowsCoinGlass');
-                        console.log(`  - XRP ETF flows (CoinGlass): ${xrpETFFlows.length} records`);
+                        // Track latest date from CoinGlass
+                        const latestTs = Math.max(...xrpETFFlows.map(f => f.timestamp));
+                        coinGlassLatestDate = new Date(latestTs).toISOString().split('T')[0];
+                        console.log(`  - XRP ETF flows (CoinGlass): ${xrpETFFlows.length} records (latest: ${coinGlassLatestDate})`);
                     } else {
                         console.log('  - XRP ETF flows: API endpoint not yet available');
                     }
                 } catch (error) {
                     console.log('  - XRP ETF flows: Not available -', error.message);
                 }
+
+                // SoSoValue scraper DISABLED - causes server crashes due to Puppeteer memory usage
+                // The scraped data already in the database will still be served via the API
+                // TODO: Re-enable with proper resource limits or run as a separate scheduled job
+                console.log('  - SoSoValue scraper: DISABLED (using cached data from database)');
 
                 // Try XRP Exchange Reserves (requires $18/mo Hobbyist plan)
                 try {
@@ -299,6 +310,28 @@ class DataAggregator {
                 `, [crypto, balance, exchangeName]);
             } catch (err) {
                 console.error(`Error storing CoinGlass reserve for ${crypto}:`, err.message);
+            }
+        }
+    }
+
+    async storeETFFlowsSoSoValueScraped(flowData, asset) {
+        if (!flowData || !Array.isArray(flowData)) return;
+
+        for (const flow of flowData) {
+            try {
+                // Scraped format: { date, net_flow, cumulative_flow, total_assets, volume, source }
+                const date = flow.date;
+                const netFlow = flow.net_flow;
+                const totalAssets = flow.total_assets || null;
+
+                await db.query(`
+                    INSERT INTO etf_flows (date, asset, net_flow, total_holdings, etf_name, source)
+                    VALUES ($1, $2, $3, $4, $5, 'sosovalue_scraped')
+                    ON CONFLICT (date, asset, etf_name) DO UPDATE
+                    SET net_flow = $3, total_holdings = $4
+                `, [date, asset, netFlow, totalAssets, 'TOTAL']);
+            } catch (err) {
+                console.error(`Error storing scraped ETF flow for ${asset}:`, err.code || err.message || err);
             }
         }
     }

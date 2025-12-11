@@ -122,13 +122,20 @@ router.get('/dashboard-summary', async (req, res) => {
     }
 });
 
-// Get XRP ETF flows from multiple sources (CoinGlass + SoSoValue fallback)
+// Get XRP ETF flows from multiple sources (CoinGlass + SoSoValue API + DB scraped data)
 router.get('/xrp-etf-flows', async (req, res) => {
     try {
-        // Fetch from both sources in parallel
-        const [coinGlassFlows, sosoFlows] = await Promise.allSettled([
+        // Fetch from all sources in parallel
+        const [coinGlassFlows, sosoFlows, dbScrapedFlows] = await Promise.allSettled([
             coinGlass.getXRPETFFlows(),
-            sosoValue.getXRPETFFlows()
+            sosoValue.getXRPETFFlows(),
+            // Also fetch scraped data from database
+            db.query(`
+                SELECT date, net_flow, total_holdings, source
+                FROM etf_flows
+                WHERE asset = 'XRP' AND etf_name = 'TOTAL' AND source = 'sosovalue_scraped'
+                ORDER BY date ASC
+            `)
         ]);
 
         let allFlows = [];
@@ -150,30 +157,48 @@ router.get('/xrp-etf-flows', async (req, res) => {
             console.log(`CoinGlass XRP ETF: ${cgFlows.length} records, latest: ${cgFlows[cgFlows.length - 1]?.date || 'none'}`);
         }
 
-        // Transform SoSoValue data
+        // Transform SoSoValue API data
         if (sosoFlows.status === 'fulfilled' && sosoFlows.value && sosoFlows.value.length > 0) {
             const ssFlows = sosoFlows.value.map(flow => ({
                 date: flow.date,
                 timestamp: new Date(flow.date).getTime(),
                 net_flow: flow.totalNetInflow,
-                price_usd: null, // SoSoValue doesn't include price
+                price_usd: null,
                 etf_breakdown: [],
                 source: 'sosovalue'
             }));
             allFlows = [...allFlows, ...ssFlows];
-            console.log(`SoSoValue XRP ETF: ${ssFlows.length} records, latest: ${ssFlows[ssFlows.length - 1]?.date || 'none'}`);
+            console.log(`SoSoValue API XRP ETF: ${ssFlows.length} records`);
+        }
+
+        // Add scraped data from database
+        if (dbScrapedFlows.status === 'fulfilled' && dbScrapedFlows.value?.rows?.length > 0) {
+            const scrapedFlows = dbScrapedFlows.value.rows.map(row => ({
+                date: row.date instanceof Date ? row.date.toISOString().split('T')[0] : row.date,
+                timestamp: new Date(row.date).getTime(),
+                net_flow: parseFloat(row.net_flow),
+                price_usd: null,
+                etf_breakdown: [],
+                source: 'sosovalue_scraped'
+            }));
+            allFlows = [...allFlows, ...scrapedFlows];
+            console.log(`DB Scraped XRP ETF: ${scrapedFlows.length} records, latest: ${scrapedFlows[scrapedFlows.length - 1]?.date || 'none'}`);
         }
 
         if (allFlows.length === 0) {
             return res.status(503).json({ error: 'No XRP ETF data available from any source' });
         }
 
-        // Merge data by date, preferring CoinGlass (more detailed) over SoSoValue
+        // Merge data by date, preferring CoinGlass > sosovalue_scraped > sosovalue
         const flowsByDate = new Map();
         for (const flow of allFlows) {
             const existing = flowsByDate.get(flow.date);
-            // Prefer CoinGlass data (has ETF breakdown and price), or take newer data
-            if (!existing || (flow.source === 'coinglass' && existing.source !== 'coinglass')) {
+            // Priority: coinglass > sosovalue_scraped > sosovalue
+            if (!existing) {
+                flowsByDate.set(flow.date, flow);
+            } else if (flow.source === 'coinglass' && existing.source !== 'coinglass') {
+                flowsByDate.set(flow.date, flow);
+            } else if (flow.source === 'sosovalue_scraped' && existing.source === 'sosovalue') {
                 flowsByDate.set(flow.date, flow);
             }
         }
