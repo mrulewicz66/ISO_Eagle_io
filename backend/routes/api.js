@@ -1,10 +1,19 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const db = require('../db/database');
 const CoinGlassService = require('../services/coinGlassService');
 const SoSoValueService = require('../services/sosoValueService');
 const CoinGeckoService = require('../services/coinGeckoService');
 const emailService = require('../services/emailService');
+
+const waitlistLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5,
+    message: { error: 'Too many signup attempts. Please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // Initialize services
 const coinGlass = new CoinGlassService(process.env.COINGLASS_API_KEY);
@@ -458,12 +467,13 @@ router.get('/debug/etf-sources', async (req, res) => {
 // ============================================
 
 // Join waitlist - POST /api/waitlist
-router.post('/waitlist', async (req, res) => {
+router.post('/waitlist', waitlistLimiter, async (req, res) => {
     try {
         const { email } = req.body;
 
         // Validate email
-        if (!email || !email.includes('@') || !email.includes('.')) {
+        const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+        if (!email || typeof email !== 'string' || email.length > 254 || !emailRegex.test(email.trim())) {
             return res.status(400).json({ error: 'Valid email required' });
         }
 
