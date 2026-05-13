@@ -14,12 +14,8 @@ const updates: Update[] = [
         changes: [
             'Server migration complete — ISO Eagle is back online on new infrastructure',
             'Full data restore from backup: ETF flows, exchange reserves, and price history intact',
-            'HTTPS enabled with SSL certificate via Let\'s Encrypt',
-            'Security hardening: firewall locked to ports 22/80/443 only',
-            'All services now bound to localhost — no direct external port exposure',
-            'HTTP security headers added (Helmet.js)',
-            'API rate limiting added to prevent abuse',
-            'Email input validation tightened on waitlist signup',
+            'HTTPS enabled with SSL certificate',
+            'API rate limiting and input validation improvements',
         ]
     },
     {
