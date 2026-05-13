@@ -23,12 +23,13 @@ const coinGecko = new CoinGeckoService(process.env.COINGECKO_API_KEY);
 // Get latest ETF flows
 router.get('/etf-flows', async (req, res) => {
     try {
-        const { asset, days = 30 } = req.query;
+        const { asset } = req.query;
+        const days = Math.min(365, Math.max(1, parseInt(req.query.days) || 30));
 
         let query = `
             SELECT date, asset, etf_name, net_flow, total_holdings
             FROM etf_flows
-            WHERE date >= NOW() - INTERVAL '${parseInt(days)} days'
+            WHERE date >= NOW() - INTERVAL '${days} days'
         `;
 
         const params = [];
@@ -43,7 +44,7 @@ router.get('/etf-flows', async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching ETF flows:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -72,7 +73,7 @@ router.get('/exchange-reserves', async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching exchange reserves:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -90,7 +91,7 @@ router.get('/prices', async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching prices:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -127,7 +128,7 @@ router.get('/dashboard-summary', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching dashboard summary:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -221,7 +222,7 @@ router.get('/xrp-etf-flows', async (req, res) => {
         res.json(mergedFlows);
     } catch (error) {
         console.error('Error fetching XRP ETF flows:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -264,7 +265,7 @@ router.get('/xrp-exchange-balances', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching XRP exchange balances:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -282,7 +283,7 @@ router.get('/debug/exchange-raw', async (req, res) => {
             allFields: Object.keys(balances[0] || {})
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -296,7 +297,7 @@ router.get('/xrp-7d-volume', async (req, res) => {
         res.json({ volume_7d: volume7d });
     } catch (error) {
         console.error('Error fetching XRP 7d volume:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -342,7 +343,7 @@ router.get('/xrp-exchange-balance-history', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching XRP exchange balance history:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -377,7 +378,7 @@ router.get('/btc-etf-flows', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching BTC ETF flows:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -412,7 +413,7 @@ router.get('/eth-etf-flows', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching ETH ETF flows:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -458,7 +459,7 @@ router.get('/debug/etf-sources', async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -542,7 +543,7 @@ router.get('/waitlist/count', async (req, res) => {
         res.json({ count });
     } catch (error) {
         console.error('Error getting waitlist count:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

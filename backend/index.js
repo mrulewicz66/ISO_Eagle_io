@@ -36,7 +36,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 // Start server
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`WebSocket server ready`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
