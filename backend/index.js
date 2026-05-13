@@ -10,6 +10,9 @@ const { startDataCollectionJobs } = require('./jobs/dataCollector');
 const app = express();
 const server = http.createServer(app);
 
+// Trust nginx reverse proxy for accurate client IPs (needed for rate limiting)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 app.use(cors({

@@ -1,5 +1,13 @@
 const { Resend } = require('resend');
 
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 class EmailService {
     constructor() {
         this.resend = process.env.RESEND_API_KEY
@@ -50,8 +58,8 @@ class EmailService {
                 html: `
                     <div style="font-family: sans-serif; padding: 20px;">
                         <h2 style="color: #7c3aed;">New Waitlist Signup</h2>
-                        <p><strong>Email:</strong> ${newEmail}</p>
-                        <p><strong>Total signups:</strong> ${totalSignups}</p>
+                        <p><strong>Email:</strong> ${escapeHtml(newEmail)}</p>
+                        <p><strong>Total signups:</strong> ${escapeHtml(String(totalSignups))}</p>
                         <p style="color: #666; font-size: 14px;">Time: ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} ET</p>
                     </div>
                 `
@@ -151,7 +159,7 @@ class EmailService {
                     <tr>
                         <td style="background-color: #1f1f23; padding: 25px 30px; border-radius: 0 0 16px 16px; text-align: center;">
                             <p style="color: #71717a; margin: 0; font-size: 13px;">
-                                You received this email because ${email} signed up for the XRP Tracker waitlist.
+                                You received this email because ${escapeHtml(email)} signed up for the XRP Tracker waitlist.
                             </p>
                             <p style="color: #52525b; margin: 15px 0 0; font-size: 12px;">
                                 &copy; ${new Date().getFullYear()} XRP Tracker | <a href="https://isoeagle.io" style="color: #6366f1; text-decoration: none;">isoeagle.io</a>

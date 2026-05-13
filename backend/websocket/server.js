@@ -17,15 +17,17 @@ function initializeWebSocket(server) {
         // Send initial data
         socket.emit('initial-data', { message: 'Connected to real-time feed' });
 
+        const ALLOWED_ROOMS = new Set(['XRP', 'BTC', 'ETH', 'SOL', 'XLM', 'ALGO', 'HBAR', 'IOTA']);
+
         // Subscribe to specific crypto
         socket.on('subscribe', (crypto) => {
-            console.log(`Client subscribed to ${crypto}`);
+            if (typeof crypto !== 'string' || !ALLOWED_ROOMS.has(crypto)) return;
             socket.join(crypto);
         });
 
         // Unsubscribe from specific crypto
         socket.on('unsubscribe', (crypto) => {
-            console.log(`Client unsubscribed from ${crypto}`);
+            if (typeof crypto !== 'string' || !ALLOWED_ROOMS.has(crypto)) return;
             socket.leave(crypto);
         });
 

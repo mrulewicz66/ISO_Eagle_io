@@ -269,23 +269,6 @@ router.get('/xrp-exchange-balances', async (req, res) => {
     }
 });
 
-// Debug endpoint to check raw exchange data
-router.get('/debug/exchange-raw', async (req, res) => {
-    try {
-        const balances = await coinGlass.getXRPExchangeReserves();
-        if (!balances || balances.length === 0) {
-            return res.json({ error: 'No data', raw: balances });
-        }
-        // Return first 2 exchanges with all their fields
-        res.json({
-            count: balances.length,
-            sample: balances.slice(0, 2),
-            allFields: Object.keys(balances[0] || {})
-        });
-    } catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 
 // Get XRP 7-day trading volume (from CoinGecko)
 router.get('/xrp-7d-volume', async (req, res) => {
@@ -417,51 +400,6 @@ router.get('/eth-etf-flows', async (req, res) => {
     }
 });
 
-// Debug endpoint to check data sources
-router.get('/debug/etf-sources', async (req, res) => {
-    try {
-        const [cgResult, ssResult] = await Promise.allSettled([
-            coinGlass.getXRPETFFlows(),
-            sosoValue.getXRPETFFlows()
-        ]);
-
-        const coinGlassData = cgResult.status === 'fulfilled' ? cgResult.value : null;
-        const sosoData = ssResult.status === 'fulfilled' ? ssResult.value : null;
-
-        const cgLatest = coinGlassData?.length > 0
-            ? new Date(coinGlassData[coinGlassData.length - 1].timestamp).toISOString().split('T')[0]
-            : null;
-        const ssLatest = sosoData?.length > 0
-            ? sosoData[sosoData.length - 1].date
-            : null;
-
-        res.json({
-            timestamp: new Date().toISOString(),
-            coinglass: {
-                status: cgResult.status,
-                error: cgResult.reason?.message || null,
-                recordCount: coinGlassData?.length || 0,
-                latestDate: cgLatest,
-                last3Records: coinGlassData?.slice(-3).map(r => ({
-                    date: new Date(r.timestamp).toISOString().split('T')[0],
-                    flow_usd: r.flow_usd
-                })) || []
-            },
-            sosovalue: {
-                status: ssResult.status,
-                error: ssResult.reason?.message || null,
-                recordCount: sosoData?.length || 0,
-                latestDate: ssLatest,
-                last3Records: sosoData?.slice(-3).map(r => ({
-                    date: r.date,
-                    totalNetInflow: r.totalNetInflow
-                })) || []
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 
 // ============================================
 // WAITLIST ENDPOINTS
